@@ -15,6 +15,10 @@ const config = {
       },
     ],
   },
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/tests/'
+  ],
 }
 
 export default config

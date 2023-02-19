@@ -1,13 +1,7 @@
-import parse from '../../src/parse.js'
-import evaluate from '../../src/evaluate.js'
+import {ParseError} from '../../src/errors.js'
+import {assertEval, type TestCase} from './utils.js'
 
-const toMap = (o: Object) => new Map(Object.entries(o))
-const assertEval = (input: string, expected: Object) => {
-  const ast = parse(input)
-  expect(evaluate(ast)).toEqual(toMap(expected))
-}
-
-test.each([
+test.each<TestCase>([
   {
     input: 'foo=',
     expected: {foo: ''},
@@ -47,11 +41,11 @@ f"`,
     expected: {a: '2'},
     desc: 'duplicated identifier => last value wins',
   },
-])('simple assignments: $desc', ({input, expected}) => {
-  assertEval(input, expected)
+])('simple assignments: $desc', (data) => {
+  assertEval(data)
 })
 
-test.each([
+test.each<TestCase>([
   {
     input: `foo=1#2`,
     expected: {foo: '1#2'},
@@ -70,11 +64,26 @@ a=b
     expected: {a: 'b'},
     desc: 'ignores comments at start/end of input'
   }
-])('comments: $desc', ({input, expected}) => {
-  assertEval(input, expected)
+])('comments: $desc', (data) => {
+  assertEval(data)
 })
 
-test.each([
+test.each<TestCase>([
+  {
+    input: `a='foo'bar"baz"`,
+    expected: {a: 'foobarbaz'},
+    desc: `works w/ all quoting styles`,
+  },
+  {
+    input: `a=a\\\n'b'\\\n"c"`,
+    expected: {a: 'abc'},
+    desc: `supports POSIX-style line continuations`,
+  },
+])('concatenation: $desc', data => {
+  assertEval(data)
+})
+
+test.each<TestCase>([
   {
     input: `a='b\\'c'`,
     expected: {a: "b'c"},
@@ -91,17 +100,40 @@ test.each([
     desc: `escaped space in unquoted string`,
   },
   {
-    input: `\
-a=b\\
-c`,
-    expected: {a: 'b\nc'},
-    desc: `escaped newline in unquoted string`,
-  },
-  {
     input: `a=\\$b`,
     expected: {a: '$b'},
     desc: `escaped $ does not invoke expansion`,
   },
-])('escaping: $desc', ({input, expected}) => {
-  assertEval(input, expected)
+])('escaping: $desc', (data) => {
+  assertEval(data)
+})
+
+test.each<TestCase>([
+  {
+    input: `a='0\\n1\\t2'`,
+    expected: {a: '0\\n1\\t2'},
+    desc: 'Single-quoted string does not interpret escaped characters.',
+  },
+])('quoting: $desc', data => {
+  assertEval(data)
+})
+
+test.each<TestCase>([
+  {
+    desc: 'at start of line',
+    input: 'export a=1 b=2',
+    expected: {a: '1', b: '2'},
+  },
+  {
+    desc: 'after an assignment on the same line',
+    input: 'a=1 export b=2',
+    error: ParseError,
+  },
+  {
+    desc: 'after another export on the same line',
+    input: 'export a=1 export b=2',
+    error: ParseError,
+  },
+])('export command: $desc', (data) => {
+  assertEval(data)
 })

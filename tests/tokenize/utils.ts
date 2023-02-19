@@ -1,9 +1,9 @@
-import {Tokenizer, TokenKind} from '../../src/tokenize'
+import {Token, Tokenizer, TokenKind} from '../../src/tokenize'
 
 
-export const tokenize = (input: string) => {
+export const tokenize = (input: string): Token[] => {
   const tokenizer = new Tokenizer(input)
-  const tokens = []
+  const tokens: Token[] = []
   while (true) {
     const token = tokenizer.next()
     tokens.push(token)

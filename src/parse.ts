@@ -32,7 +32,11 @@ export class Parser {
   }
 
   private parseAssignment() {
-    const name = this.expect(TokenKind.Identifier)
+    let name = this.expect(TokenKind.Identifier)
+    if (name.col === 1 && name.value.toLowerCase() === 'export') {
+      this.expect(TokenKind.Whitespace)
+      name = this.expect(TokenKind.Identifier)
+    }
     this.expect(TokenKind.Equal)
     const token = this.current()
     switch (token.kind) {
@@ -41,20 +45,54 @@ export class Parser {
       case TokenKind.Newline:
       case TokenKind.EOF:
         return new Assignment(name.value, null)
-      case TokenKind.SingleQuote: {
-        const value = this.parseSingleQuotedString()
-        return new Assignment(name.value, value)
-      }
-      case TokenKind.DoubleQuote: {
-        const value = this.parseDoubleQuotedString()
-        return new Assignment(name.value, value)
-      }
       default: {
-        const value = this.parseUnquotedString()
+        const value = this.parseAssignmentValue()
         return new Assignment(name.value, value)
       }
     }
   }
+
+  private parseAssignmentValue() {
+    const nodes: Expression[] = []
+    while (true) {
+      const token = this.current()
+      switch (token.kind) {
+        case TokenKind.EOF:
+        case TokenKind.Newline:
+        case TokenKind.Whitespace:
+          return new CompositeValue(nodes)
+        case TokenKind.SingleQuote:
+          nodes.push(this.parseSingleQuotedString())
+          break
+        case TokenKind.DoubleQuote:
+          nodes.push(this.parseDoubleQuotedString())
+          break
+        case TokenKind.Dollar:
+          nodes.push(this.parseReference())
+          break
+        case TokenKind.Escaped: {
+          if (token.value !== '\n') {
+            nodes.push(new RawValue(token.value))
+          }
+          this.consume()
+          break
+        }
+        default: {
+          const value = this.accumulateUntil(
+            TokenKind.Newline,
+            TokenKind.Whitespace,
+            TokenKind.Dollar,
+            TokenKind.DoubleQuote,
+            TokenKind.SingleQuote,
+            TokenKind.Escaped,
+          )
+          nodes.push(new RawValue(value))
+          break
+        }
+      }
+    }
+  }
+
 
   private parseSingleQuotedString() {
     this.expect(TokenKind.SingleQuote)
@@ -67,6 +105,15 @@ export class Parser {
         case TokenKind.SingleQuote:
           this.consume()
           return new RawValue(value)
+        case TokenKind.Escaped: {
+          this.consume()
+          if (token.value === "'") {
+            value += "'"
+          } else {
+            value += `\\${token.value}`
+          }
+          break
+        }
         default:
           this.consume()
           value += token.value
@@ -91,39 +138,6 @@ export class Parser {
           break
         default: {
           const value = this.accumulateUntil(TokenKind.Dollar, TokenKind.DoubleQuote)
-          nodes.push(new RawValue(value))
-          break
-        }
-      }
-    }
-  }
-
-  private parseUnquotedString() {
-    const nodes: Expression[] = []
-    while (true) {
-      const token = this.current()
-      switch (token.kind) {
-        case TokenKind.EOF:
-        case TokenKind.Newline:
-        case TokenKind.Whitespace:
-          return new CompositeValue(nodes)
-        case TokenKind.SingleQuote:
-          nodes.push(this.parseSingleQuotedString())
-          break
-        case TokenKind.DoubleQuote:
-          nodes.push(this.parseDoubleQuotedString())
-          break
-        case TokenKind.Dollar:
-          nodes.push(this.parseReference())
-          break
-        default: {
-          const value = this.accumulateUntil(
-            TokenKind.Newline,
-            TokenKind.Whitespace,
-            TokenKind.Dollar,
-            TokenKind.DoubleQuote,
-            TokenKind.SingleQuote
-          )
           nodes.push(new RawValue(value))
           break
         }

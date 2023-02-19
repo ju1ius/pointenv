@@ -71,7 +71,7 @@ const WS_RX = /[ \t\f\r\v]+/y
 // other than TokenKind.Any
 const ANY_RX = /[^\\#\sA-Za-z_${}=+:?"'-]+/y
 // skips over comments
-const COMMENT_RX = /#[^\n]*(?:\n|$)/y
+const COMMENT_RX = /#[^\n]*(\n|$)/y
 
 export class Tokenizer {
   private pos: number = -1
@@ -130,7 +130,7 @@ export class Tokenizer {
           COMMENT_RX.lastIndex = this.pos
           const m = COMMENT_RX.exec(this.input)!
           this.advance(m[0].length)
-          if (m[0].endsWith('\n')) {
+          if (m[1] === '\n') {
             this.newline()
           }
           break

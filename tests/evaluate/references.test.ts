@@ -1,35 +1,6 @@
-import parse from '../../src/parse.js'
-import evaluate from '../../src/evaluate.js'
 import {UndefinedVariable} from '../../src/errors.js'
 
-type TestInput = {
-  desc: string
-  input: string
-  scope?: Map<string, string>
-}
-
-type ExceptionClass = new () => Error
-
-type SuccessCase = TestInput & {
-  expected: Record<string, string>
-}
-type ErrorCase = TestInput & {
-  error: Error | ExceptionClass | string | RegExp
-}
-type TestCase =
-  | SuccessCase
-  | ErrorCase
-
-
-const toMap = (o: Object) => new Map(Object.entries(o))
-const assertEval = ({input, scope = new Map(), ...rest}: TestCase) => {
-  const ast = parse(input)
-  if ('error' in rest) {
-    expect(() => evaluate(ast, scope)).toThrow(rest.error)
-  } else {
-    expect(evaluate(ast, scope)).toEqual(toMap(rest.expected))
-  }
-}
+import {assertEval, toMap, type TestCase} from './utils.js'
 
 test.each<TestCase>([
   {
@@ -65,7 +36,7 @@ test.each<TestCase>([
 
 // test matrix from POSIX spec:
 // https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02
-test.each<TestCase & {error?: Function}>([
+test.each<TestCase>([
   // line 1
   {
     input: 'result=${parameter:-word}',
@@ -222,7 +193,7 @@ test.each<TestCase>([
     desc: ':- operator falls back to provided default',
   },
   {
-    input: `a=\${a:-"foo\${b:-"\${c:-nope}"}baz"}`,
+    input: `a=\${a:-"foo\${b:-"\${c:-'nope'}"}baz"}`,
     expected: {a: 'foobarbaz'},
     scope: toMap({c: 'bar'}),
     desc: ':- operator supports recursive expansion',
