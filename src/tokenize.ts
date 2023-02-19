@@ -46,7 +46,8 @@ export class Token {
   constructor(
     public readonly kind: TokenKind,
     public readonly value: string,
-    public readonly pos: number,
+    public readonly line: number,
+    public readonly col: number,
   ) {}
 }
 
@@ -75,6 +76,8 @@ const COMMENT_RX = /#[^\n]*(?:\n|$)/y
 export class Tokenizer {
   private pos: number = -1
   private end: number
+  private line = 1
+  private col = 0
 
   constructor(
     private readonly input: string
@@ -83,27 +86,32 @@ export class Tokenizer {
   }
 
   next(): Token {
-    let cc = this.input.charAt(++this.pos)
+    this.advance()
+    let cc = this.input.charAt(this.pos)
     switch (cc) {
       case '':
-        return new Token(TokenKind.EOF, '', this.pos)
+        return this.make(TokenKind.EOF, '')
       case '\\': {
         let cn = this.input.charAt(this.pos + 1)
         if (cn) {
-          return new Token(TokenKind.Escaped, cn, ++this.pos)
+          const token = this.make(TokenKind.Escaped, cn)
+          this.advance()
+          return token
         }
-        return new Token(TokenKind.Characters, '\\', this.pos)
+        return this.make(TokenKind.Characters, '\\')
       }
       case ' ': case '\t': case '\f': case '\r': case '\v': {
         return this.consumeWhitespace()
       }
-      case '\n':
-        // TODO: track line & column numbers
-        return new Token(TokenKind.Newline, '\n', this.pos)
+      case '\n': {
+        const token = this.make(TokenKind.Newline, '\n')
+        this.newline()
+        return token
+      }
       default: {
         let tt
         if (tt = CHAR_TOKENS[cc]) {
-          return new Token(tt, cc, this.pos)
+          return this.make(tt, cc)
         }
         if (tt = this.matchIdentifier()) {
           return tt
@@ -121,18 +129,21 @@ export class Tokenizer {
         case '#': {
           COMMENT_RX.lastIndex = this.pos
           const m = COMMENT_RX.exec(this.input)!
-          this.pos += m[0].length
+          this.advance(m[0].length)
+          if (m[0].endsWith('\n')) {
+            this.newline()
+          }
           break
         }
         case ' ': case '\t': case '\f': case '\r': case '\v': {
           WS_RX.lastIndex = this.pos
           const m = WS_RX.exec(this.input)!
-          this.pos += m[0].length
+          this.advance(m[0].length)
           break
         }
         case '\n': {
-          // TODO: track line & column numbers
           ++this.pos
+          this.newline()
           break
         }
         default: {
@@ -147,24 +158,39 @@ export class Tokenizer {
     IDENT_RX.lastIndex = this.pos
     const m = IDENT_RX.exec(this.input)
     if (!m) return null
-    const token = new Token(TokenKind.Identifier, m[0], this.pos)
-    this.pos += m[0].length - 1
+    const token = this.make(TokenKind.Identifier, m[0])
+    this.advance(m[0].length - 1)
     return token
   }
 
   private matchAny() {
     ANY_RX.lastIndex = this.pos
     const m = ANY_RX.exec(this.input)!
-    const token = new Token(TokenKind.Characters, m[0], this.pos)
-    this.pos += m[0].length - 1
+    const token = this.make(TokenKind.Characters, m[0])
+    this.advance(m[0].length - 1)
     return token
   }
 
   private consumeWhitespace() {
     WS_RX.lastIndex = this.pos
     const m = WS_RX.exec(this.input)!
-    const token = new Token(TokenKind.Whitespace, m[0], this.pos)
-    this.pos += m[0].length - 1
+    const token = this.make(TokenKind.Whitespace, m[0])
+    this.advance(m[0].length - 1)
     return token
+  }
+
+  // FIXME: this is public for tests only
+  advance(n = 1) {
+    this.pos += n
+    this.col += n
+  }
+
+  private newline() {
+    ++this.line
+    this.col = 0
+  }
+
+  private make(kind: TokenKind, value: string) {
+    return new Token(kind, value, this.line, this.col)
   }
 }

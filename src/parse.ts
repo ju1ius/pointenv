@@ -9,7 +9,7 @@ export default (input: string) => {
 
 export class Parser {
 
-  private token: Token = new Token(TokenKind.EOF, '', 0)
+  private token: Token = new Token(TokenKind.EOF, '', 0, 0)
 
   constructor(
     private readonly tokenizer: Tokenizer
@@ -226,7 +226,8 @@ export class Parser {
 
   private unexpected(token: Token, ...expectedKinds: TokenKind[]): never {
     const name = tokenName(token)
+    const {line, col} = token
     const expected = expectedKinds.map(kindName).join(', ')
-    throw new ParseError(`Unexpected token ${name}, expected one of: ${expected}`)
+    throw new ParseError(`Unexpected token ${name}@${line}:${col}, expected: ${expected}`)
   }
 }
