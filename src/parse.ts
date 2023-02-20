@@ -1,5 +1,5 @@
 import {ParseError} from './errors.js'
-import {Assignment, CompositeValue, RawValue, Reference, Expression, AssignmentList} from './ast.js'
+import {Assignment, CompositeValue, RawValue, SimpleReference, Expression, AssignmentList, ComplexReference, Operator} from './ast.js'
 import {kindName, Token, Tokenizer, TokenKind, tokenName} from './tokenize.js'
 
 export default (input: string) => {
@@ -149,12 +149,12 @@ export class Parser {
     this.expect(TokenKind.Dollar)
     let token = this.expect(TokenKind.Identifier, TokenKind.OpenBrace)
     if (token.kind === TokenKind.Identifier) {
-      return new Reference(token.value)
+      return new SimpleReference(token.value)
     }
     const id = this.expect(TokenKind.Identifier).value
     if (this.current().kind === TokenKind.CloseBrace) {
       this.consume()
-      return new Reference(id)
+      return new SimpleReference(id)
     }
     let op = ''
     if (this.current().kind === TokenKind.Colon) {
@@ -163,7 +163,7 @@ export class Parser {
     }
     op += this.expect(TokenKind.Minus, TokenKind.Equal, TokenKind.Plus, TokenKind.QuestionMark).value
     const rhs = this.parseDefaultExpression()
-    return new Reference(id, op, rhs)
+    return new ComplexReference(id, op as Operator, rhs)
   }
 
   private parseDefaultExpression() {

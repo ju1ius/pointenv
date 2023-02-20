@@ -1,18 +1,18 @@
 import {UndefinedVariable} from '../../src/errors.js'
 
-import {assertEval, toMap, type TestCase} from './utils.js'
+import {assertEval, type TestCase} from './utils.js'
 
 test.each<TestCase>([
   {
     input: `a=1 b=$a c="$a" d='$a'`,
     expected: {a: '1', b: '1', c: '1', d: '$a'},
-    scope: toMap({a: '0'}),
+    scope: {a: '0'},
     desc: 'picks value from local scope',
   },
   {
     input: `a=$b b="$b" c='$b'`,
     expected: {a: '1', b: '1', c: '$b'},
-    scope: toMap({b: '1'}),
+    scope: {b: '1'},
     desc: 'picks value from global scope',
   },
   {
@@ -41,13 +41,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter:-word}',
     expected: {result: 'ok'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute parameter',
   },
   {
     input: 'result=${parameter:-word}',
     expected: {result: 'word'},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => substitute word',
   },
   {
@@ -59,13 +59,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter-word}',
     expected: {result: 'ok'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute parameter',
   },
   {
     input: 'result=${parameter-word}',
     expected: {result: ''},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => substitute null',
   },
   {
@@ -77,13 +77,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter:=word}',
     expected: {result: 'ok'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute parameter',
   },
   {
     input: 'result=${parameter:=word}',
     expected: {result: 'word', parameter: 'word'},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => assign word',
   },
   {
@@ -95,13 +95,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter=word}',
     expected: {result: 'ok'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute parameter',
   },
   {
     input: 'result=${parameter=word}',
     expected: {result: ''},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => substitute null',
   },
   {
@@ -113,13 +113,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter:?word}',
     expected: {result: 'ok'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute parameter',
   },
   {
     input: 'result=${parameter:?word}',
     error: UndefinedVariable,
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => error',
   },
   {
@@ -131,13 +131,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter?word}',
     expected: {result: 'ok'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute parameter',
   },
   {
     input: 'result=${parameter?word}',
     expected: {result: ''},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => substitute null',
   },
   {
@@ -149,13 +149,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter:+word}',
     expected: {result: 'word'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute word',
   },
   {
     input: 'result=${parameter:+word}',
     expected: {result: ''},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => substitute null',
   },
   {
@@ -167,13 +167,13 @@ test.each<TestCase>([
   {
     input: 'result=${parameter+word}',
     expected: {result: 'word'},
-    scope: toMap({parameter: 'ok'}),
+    scope: {parameter: 'ok'},
     desc: 'parameter is set and not null => substitute word',
   },
   {
     input: 'result=${parameter+word}',
     expected: {result: 'word'},
-    scope: toMap({parameter: ''}),
+    scope: {parameter: ''},
     desc: 'parameter is set but null => substitute word',
   },
   {
@@ -189,13 +189,13 @@ test.each<TestCase>([
   {
     input: 'a=${a:-0} b=${b:-} c=${c:-1}',
     expected: {a: '42', b: '', c: '1'},
-    scope: toMap({a: 42, c: ''}),
+    scope: {a: '42', c: ''},
     desc: ':- operator falls back to provided default',
   },
   {
     input: `a=\${a:-"foo\${b:-"\${c:-'nope'}"}baz"}`,
     expected: {a: 'foobarbaz'},
-    scope: toMap({c: 'bar'}),
+    scope: {c: 'bar'},
     desc: ':- operator supports recursive expansion',
   },
   {

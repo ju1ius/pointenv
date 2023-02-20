@@ -16,12 +16,14 @@
     "node": ">=18.0"
   },
   "type": "module",
-  "main": "lib/main.js",
+  "main": "./lib/index.js",
   "exports": {
-    "./*": "./lib/*"
+    ".": "./lib/index.js"
   },
+  "types": "./lib/index.d.ts",
   "scripts": {
     "test": "jest",
+    "coverage": "jest --coverage",
     "build": "rm -rf lib && tsc",
     "watch": "rm -rf lib && tsc --watch"
   },

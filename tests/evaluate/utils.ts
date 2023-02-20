@@ -1,10 +1,10 @@
 import parse from '../../src/parse.js'
-import evaluate from '../../src/evaluate.js'
+import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
 
 type TestInput = {
   desc: string
   input: string
-  scope?: Map<string, string>
+  scope?: Scope | NodeJS.Dict<string>
 }
 
 type ExceptionClass = new () => Error
@@ -22,16 +22,14 @@ export type TestCase =
   | ErrorCase
 
 
-export const toMap = (o: Object) => new Map(Object.entries(o))
-
 export const assertEval = ({input, scope = new Map(), ...rest}: TestCase) => {
   if ('error' in rest) {
     expect(() => {
       const ast = parse(input)
-      evaluate(ast, scope)
+      evaluate(ast, toScope(scope))
     }).toThrow(rest.error)
   } else {
     const ast = parse(input)
-    expect(evaluate(ast, scope)).toEqual(toMap(rest.expected))
+    expect(evaluate(ast, toScope(scope))).toEqual(toScope(rest.expected))
   }
 }

@@ -27,11 +27,24 @@ export class CompositeValue {
   }
 }
 
-export class Reference {
+export class SimpleReference {
   constructor(
     public readonly id: string,
-    public readonly op?: string,
-    public readonly rhs?: CompositeValue,
+  ) {
+  }
+}
+
+export type Operator =
+  | '-' | ':-'
+  | '=' | ':='
+  | '+' | ':+'
+  | '?' | ':?'
+
+export class ComplexReference {
+  constructor(
+    public readonly id: string,
+    public readonly op: Operator,
+    public readonly rhs: CompositeValue,
   ) {
   }
 }
@@ -39,6 +52,10 @@ export class Reference {
 export type AnyValue =
   | RawValue
   | CompositeValue
+
+export type Reference =
+  | SimpleReference
+  | ComplexReference
 
 export type Expression =
   | AnyValue
