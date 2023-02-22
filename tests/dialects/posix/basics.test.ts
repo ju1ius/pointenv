@@ -1,5 +1,6 @@
-import {ParseError} from '../../src/errors.js'
-import {assertEval, type TestCase} from './utils.js'
+import {ParseError} from '../../../src/errors.js'
+import parse from '../../../src/parsers/posix.js'
+import {assertEval, type TestCase} from '../utils.js'
 
 test.each<TestCase>([
   {
@@ -41,19 +42,37 @@ f"`,
     expected: {a: '2'},
     desc: 'duplicated identifier => last value wins',
   },
+  {
+    input: 'a= "b"',
+    error: ParseError,
+    desc: 'invalid whitespace after equal sign',
+  },
+  {
+    input: 'A=\nB=',
+    expected: {A: '', B: ''},
+    desc: 'newline or EOF after equal sign',
+  },
 ])('simple assignments: $desc', (data) => {
-  assertEval(data)
+  assertEval(data, parse)
 })
 
 test.each<TestCase>([
   {
-    input: `foo=1#2`,
-    expected: {foo: '1#2'},
+    input: `
+foo=1#2
+bar='1'#2
+baz="1"#2
+    `,
+    expected: {foo: '1#2', bar: '1#2', baz: '1#2'},
     desc: '# inside value is not a comment',
   },
   {
-    input: `foo=bar # it's a foo!`,
-    expected: {foo: 'bar'},
+    input: `
+foo=1 # a comment
+bar='1' # a comment
+baz="1" # a comment
+    `,
+    expected: {foo: '1', bar: '1', baz: '1'},
     desc: '# after unquoted value starts a comment',
   },
   {
@@ -63,9 +82,9 @@ a=b
 # last=1`,
     expected: {a: 'b'},
     desc: 'ignores comments at start/end of input'
-  }
+  },
 ])('comments: $desc', (data) => {
-  assertEval(data)
+  assertEval(data, parse)
 })
 
 test.each<TestCase>([
@@ -80,19 +99,24 @@ test.each<TestCase>([
     desc: `supports POSIX-style line continuations`,
   },
 ])('concatenation: $desc', data => {
-  assertEval(data)
+  assertEval(data, parse)
 })
 
 test.each<TestCase>([
   {
-    input: `a='b\\'c'`,
+    input: `a="b\\"c"`,
+    expected: {a: 'b"c'},
+    desc: `escaped double-quote in double-quoted string`,
+  },
+  {
+    input: `a='b'\\''c'`,
     expected: {a: "b'c"},
     desc: `escaped single-quote in singe-quoted string`,
   },
   {
-    input: `a="b\\"c"`,
-    expected: {a: 'b"c'},
-    desc: `escaped double-quote in double-quoted string`,
+    input: `a='b\\'c'`,
+    desc: `wrong single-quote escaping`,
+    error: ParseError,
   },
   {
     input: `a=b\\ c`,
@@ -102,10 +126,20 @@ test.each<TestCase>([
   {
     input: `a=\\$b`,
     expected: {a: '$b'},
-    desc: `escaped $ does not invoke expansion`,
+    desc: `escaped $ in unquoted value does not invoke expansion`,
+  },
+  {
+    input: `a="\\$b"`,
+    expected: {a: '$b'},
+    desc: `escaped $ in double-quoted value does not invoke expansion`,
+  },
+  {
+    input: `a="\\o"`,
+    expected: {a: '\\o'},
+    desc: `escaped non-special character is returned verbatim`,
   },
 ])('escaping: $desc', (data) => {
-  assertEval(data)
+  assertEval(data, parse)
 })
 
 test.each<TestCase>([
@@ -115,25 +149,6 @@ test.each<TestCase>([
     desc: 'Single-quoted string does not interpret escaped characters.',
   },
 ])('quoting: $desc', data => {
-  assertEval(data)
+  assertEval(data, parse)
 })
 
-test.each<TestCase>([
-  {
-    desc: 'at start of line',
-    input: 'export a=1 b=2',
-    expected: {a: '1', b: '2'},
-  },
-  {
-    desc: 'after an assignment on the same line',
-    input: 'a=1 export b=2',
-    error: ParseError,
-  },
-  {
-    desc: 'after another export on the same line',
-    input: 'export a=1 export b=2',
-    error: ParseError,
-  },
-])('export command: $desc', (data) => {
-  assertEval(data)
-})

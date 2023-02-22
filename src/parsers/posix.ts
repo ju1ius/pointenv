@@ -1,47 +1,26 @@
-import {ParseError} from './errors.js'
-import {Assignment, CompositeValue, RawValue, SimpleReference, Expression, AssignmentList, ComplexReference, Operator} from './ast.js'
-import {kindName, Token, Tokenizer, TokenKind, tokenName} from './tokenize.js'
+import {ParseError} from '../errors.js'
+import {Assignment, CompositeValue, RawValue, SimpleReference, Expression, ComplexReference} from '../ast.js'
+import {Tokenizer, TokenKind} from '../tokenize.js'
+import {Parser} from './common.js'
 
 export default (input: string) => {
-  const parser = new Parser(new Tokenizer(input))
+  const parser = new PosixParser(new Tokenizer(input))
   return parser.parse()
 }
 
-export class Parser {
+class PosixParser extends Parser {
 
-  private token: Token = new Token(TokenKind.EOF, '', 0, 0)
-
-  constructor(
-    private readonly tokenizer: Tokenizer
-  ) {
+  constructor(tokenizer: Tokenizer) {
+    super(tokenizer)
   }
 
-  parse() {
-    return this.parseAssignmentList()
-  }
-
-  private parseAssignmentList() {
-    const nodes: Assignment[] = []
-    this.skipWhitespaceAndComments()
-    while (this.current().kind !== TokenKind.EOF) {
-      nodes.push(this.parseAssignment())
-      this.skipWhitespaceAndComments()
-    }
-
-    return new AssignmentList(nodes)
-  }
-
-  private parseAssignment() {
-    let name = this.expect(TokenKind.Identifier)
-    if (name.col === 1 && name.value.toLowerCase() === 'export') {
-      this.expect(TokenKind.Whitespace)
-      name = this.expect(TokenKind.Identifier)
-    }
+  protected parseAssignment() {
+    const name = this.skipExportStatement()
     this.expect(TokenKind.Equal)
     const token = this.current()
     switch (token.kind) {
       case TokenKind.Whitespace:
-        throw new ParseError(`Whitespace after equal sign in assignment`)
+        throw new ParseError(`Whitespace after equal sign in assignment on line ${token.line}, column: ${token.col}`)
       case TokenKind.Newline:
       case TokenKind.EOF:
         return new Assignment(name.value, null)
@@ -52,7 +31,7 @@ export class Parser {
     }
   }
 
-  private parseAssignmentValue() {
+  protected parseAssignmentValue() {
     const nodes: Expression[] = []
     while (true) {
       const token = this.current()
@@ -71,6 +50,7 @@ export class Parser {
           nodes.push(this.parseReference())
           break
         case TokenKind.Escaped: {
+          // https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_02_01
           if (token.value !== '\n') {
             nodes.push(new RawValue(token.value))
           }
@@ -93,25 +73,27 @@ export class Parser {
     }
   }
 
-
-  private parseSingleQuotedString() {
-    this.expect(TokenKind.SingleQuote)
+  /**
+   * @link https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_02_02
+   */
+  protected parseSingleQuotedString() {
+    const start = this.expect(TokenKind.SingleQuote)
     let value = ''
     while (true) {
       const token = this.current()
       switch (token.kind) {
         case TokenKind.EOF:
-          throw new ParseError(`Unterminated single-quoted string.`)
+          throw new ParseError(`Unterminated single-quoted string on line ${start.line}, column ${start.col}.`)
         case TokenKind.SingleQuote:
           this.consume()
           return new RawValue(value)
         case TokenKind.Escaped: {
           this.consume()
           if (token.value === "'") {
-            value += "'"
-          } else {
-            value += `\\${token.value}`
+            value += '\\'
+            return new RawValue(value)
           }
+          value += `\\${token.value}`
           break
         }
         default:
@@ -122,22 +104,39 @@ export class Parser {
     }
   }
 
-  private parseDoubleQuotedString() {
-    this.expect(TokenKind.DoubleQuote)
+  /**
+   * @link https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_02_03
+   */
+  protected parseDoubleQuotedString() {
+    const start = this.expect(TokenKind.DoubleQuote)
     const nodes: Expression[] = []
     while (true) {
       const token = this.current()
       switch (token.kind) {
         case TokenKind.EOF:
-          throw new ParseError(`Unterminated double-quoted string.`)
+          throw new ParseError(`Unterminated double-quoted string on line ${start.line}, column ${start.col}.`)
         case TokenKind.DoubleQuote:
           this.consume()
           return new CompositeValue(nodes)
         case TokenKind.Dollar:
           nodes.push(this.parseReference())
           break
+        case TokenKind.Escaped:
+          this.consume()
+          switch (token.value) {
+            case '"':
+            case '$':
+            case '\\':
+            case '\n':
+              nodes.push(new RawValue(token.value))
+              break
+            default:
+              nodes.push(new RawValue(`\\${token.value}`))
+              break
+          }
+          break
         default: {
-          const value = this.accumulateUntil(TokenKind.Dollar, TokenKind.DoubleQuote)
+          const value = this.accumulateUntil(TokenKind.Dollar, TokenKind.DoubleQuote, TokenKind.Escaped)
           nodes.push(new RawValue(value))
           break
         }
@@ -145,9 +144,9 @@ export class Parser {
     }
   }
 
-  private parseReference() {
+  protected parseReference() {
     this.expect(TokenKind.Dollar)
-    let token = this.expect(TokenKind.Identifier, TokenKind.OpenBrace)
+    let token = this.expectSome(TokenKind.Identifier, TokenKind.OpenBrace)
     if (token.kind === TokenKind.Identifier) {
       return new SimpleReference(token.value)
     }
@@ -156,17 +155,12 @@ export class Parser {
       this.consume()
       return new SimpleReference(id)
     }
-    let op = ''
-    if (this.current().kind === TokenKind.Colon) {
-      op = ':'
-      this.consume()
-    }
-    op += this.expect(TokenKind.Minus, TokenKind.Equal, TokenKind.Plus, TokenKind.QuestionMark).value
+    const op = this.parseExpansionOperator()
     const rhs = this.parseDefaultExpression()
-    return new ComplexReference(id, op as Operator, rhs)
+    return new ComplexReference(id, op, rhs)
   }
 
-  private parseDefaultExpression() {
+  protected parseDefaultExpression() {
     const nodes: Expression[] = []
     while (true) {
       const token = this.current()
@@ -197,51 +191,5 @@ export class Parser {
         }
       }
     }
-  }
-
-  private skipWhitespaceAndComments() {
-    this.token = this.tokenizer.skipWhitespaceAndComments()
-  }
-
-  private accumulateUntil(...until: TokenKind[]) {
-    let value = ''
-    while (true) {
-      const token = this.current()
-      if (token.kind === TokenKind.EOF) {
-        return value
-      }
-      if (until.some(kind => token.kind === kind)) {
-        return value
-      }
-      this.consume()
-      value += token.value
-    }
-  }
-
-  private current(): Token {
-    return this.token
-  }
-
-  private consume() {
-    this.token = this.tokenizer.next()
-  }
-
-  private expect(...kinds: TokenKind[]) {
-    const token = this.current()
-
-    if (!kinds.some(kind => token.kind === kind)) {
-      this.unexpected(token, ...kinds)
-    }
-
-    this.consume()
-
-    return token
-  }
-
-  private unexpected(token: Token, ...expectedKinds: TokenKind[]): never {
-    const name = tokenName(token)
-    const {line, col} = token
-    const expected = expectedKinds.map(kindName).join(', ')
-    throw new ParseError(`Unexpected token ${name}@${line}:${col}, expected: ${expected}`)
   }
 }

@@ -1,5 +1,5 @@
-import parse from '../../src/parse.js'
 import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
+import {Parser} from '../../src/dialects.js'
 
 type TestInput = {
   desc: string
@@ -22,7 +22,7 @@ export type TestCase =
   | ErrorCase
 
 
-export const assertEval = ({input, scope = new Map(), ...rest}: TestCase) => {
+export const assertEval = ({input, scope = new Map(), ...rest}: TestCase, parse: Parser) => {
   if ('error' in rest) {
     expect(() => {
       const ast = parse(input)

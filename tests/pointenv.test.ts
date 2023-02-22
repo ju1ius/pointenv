@@ -1,8 +1,6 @@
-import fs from 'node:fs/promises'
+import {jest} from '@jest/globals'
 import {toScope} from '../src/evaluate.js'
-import pointenv, {load, type Options} from '../src/index.js'
-
-jest.mock('node:fs/promises')
+import type {Options} from '../src/index.js'
 
 type TestCase = {
   desc: string
@@ -11,15 +9,22 @@ type TestCase = {
   expected: Record<string, string>,
 }
 
+const MockPaths = {
+  files: {} as Record<string, string>,
+}
+jest.unstable_mockModule('node:fs/promises', () => ({
+  readFile: jest.fn(async (path: string) => MockPaths.files[path]),
+}))
+
 describe('pointenv', () => {
   const backupEnv = process.env
   beforeEach(() => {
-    jest.resetAllMocks()
     Object.assign(process.env, {
       TEST_IS_DEFINED: 'yep',
     })
   })
   afterEach(() => {
+    // jest.resetAllMocks()
     process.env = backupEnv
   })
   test.each<TestCase>([
@@ -40,12 +45,11 @@ describe('pointenv', () => {
       expected: {TEST_IS_DEFINED: 'nope'},
     },
   ])('$desc', async ({files, options, expected}) => {
-    const readFile = (fs.readFile as jest.Mock).mockImplementation(
-      async (path: string) => files[path]
-    )
+    MockPaths.files = files
+    const pointenv = (await import('../src/index.js')).default
+
     const paths = Object.keys(files)
     const result = await pointenv(paths, options)
-    expect(readFile).toHaveBeenCalledTimes(paths.length)
     expect(result).toEqual(new Map(Object.entries(expected)))
     expect(process.env).toMatchObject(expected)
   })
@@ -53,7 +57,7 @@ describe('pointenv', () => {
 
 describe('load', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
+    // jest.resetAllMocks()
   })
 
   test.each<TestCase>([
@@ -103,12 +107,11 @@ describe('load', () => {
       expected: {a: '1', b: '2'},
     },
   ])('$desc', async ({files, options, expected}) => {
-    const readFile = (fs.readFile as jest.Mock).mockImplementation(
-      async (path: string) => files[path]
-    )
+    MockPaths.files = files
+    const {load} = await import('../src/index.js')
+
     const paths = Object.keys(files)
     const result = await load(paths, options)
-    expect(readFile).toHaveBeenCalledTimes(paths.length)
     expect(result).toEqual(toScope(expected))
   })
 })

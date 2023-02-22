@@ -121,39 +121,6 @@ export class Tokenizer {
     }
   }
 
-  skipWhitespaceAndComments() {
-    if (this.pos < 0) this.pos = 0
-    while (true) {
-      let cc = this.input.charAt(this.pos)
-      switch (cc) {
-        case '#': {
-          COMMENT_RX.lastIndex = this.pos
-          const m = COMMENT_RX.exec(this.input)!
-          this.advance(m[0].length)
-          if (m[1] === '\n') {
-            this.newline()
-          }
-          break
-        }
-        case ' ': case '\t': case '\f': case '\r': case '\v': {
-          WS_RX.lastIndex = this.pos
-          const m = WS_RX.exec(this.input)!
-          this.advance(m[0].length)
-          break
-        }
-        case '\n': {
-          ++this.pos
-          this.newline()
-          break
-        }
-        default: {
-          --this.pos
-          return this.next()
-        }
-      }
-    }
-  }
-
   private matchIdentifier() {
     IDENT_RX.lastIndex = this.pos
     const m = IDENT_RX.exec(this.input)
@@ -179,8 +146,7 @@ export class Tokenizer {
     return token
   }
 
-  // FIXME: this is public for tests only
-  advance(n = 1) {
+  private advance(n = 1) {
     this.pos += n
     this.col += n
   }

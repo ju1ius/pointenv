@@ -1,0 +1,5 @@
+services:
+  pointenv:
+    image: debian:bullseye-slim
+    env_file:
+      - ${ENV_FILE?}

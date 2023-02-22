@@ -4,9 +4,11 @@
 const config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  roots: ["tests", "src"],
   transform: {
     '^.+\\.ts$': [
       'ts-jest',
@@ -17,7 +19,8 @@ const config = {
   },
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    '/tests/'
+    '/tests/',
+    '/dist/',
   ],
 }
 
