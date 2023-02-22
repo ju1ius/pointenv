@@ -1,3 +1,5 @@
+const isCI = !!process.env.CI
+
 /**
  * @type {import('ts-jest').JestConfigWithTsJest}
  */
@@ -17,11 +19,9 @@ const config = {
       },
     ],
   },
-  coveragePathIgnorePatterns: [
-    '/node_modules/',
-    '/tests/',
-    '/dist/',
-  ],
+  collectCoverage: true,
+  collectCoverageFrom: ['./src/**'],
+  coverageReporters: isCI ? ['text', 'cobertura'] : ['html'],
 }
 
 export default config
