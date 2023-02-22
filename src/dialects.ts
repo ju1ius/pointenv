@@ -2,7 +2,7 @@ import {AssignmentList} from './ast.js'
 
 export enum Dialect {
   Posix = 'posix',
-  Docker = 'docker',
+  Compose = 'compose',
 }
 
 export type Parser = (input: string) => AssignmentList

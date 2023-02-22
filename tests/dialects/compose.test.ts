@@ -2,7 +2,7 @@ import path from 'node:path'
 import {readFileSync} from 'node:fs'
 import * as resources from '../resources.js'
 
-import parse from '../../src/parsers/docker.js'
+import parse from '../../src/parsers/compose.js'
 import evaluate from '../../src/evaluate.js'
 
 const loadCases = () => {

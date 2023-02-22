@@ -4,6 +4,10 @@
   "description": "Polyglot dotenv parser and evaluator.",
   "author": "ju1ius <jules.bernable@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ju1ius/pointenv.git"
+  },
   "keywords": [
     "dotenv",
     "parser",
@@ -21,11 +25,20 @@
     ".": "./dist/src/index.js"
   },
   "types": "./dist/src/index.d.ts",
+  "files": [
+    "./dist/src/**/*.js",
+    "./dist/src/**/*.d.ts"
+  ],
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "build": "rm -rf dist && tsc",
-    "watch": "rm -rf dist && tsc --watch"
+    "watch": "rm -rf dist && tsc --watch",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test",
+    "preversion": "npm test",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "devDependencies": {
     "@types/glob": "^8.0.1",
