@@ -104,14 +104,14 @@ test.each<TestCase>([
 test.each<TestCase>([
   {
     input: `
-foo=\${NOPE:-foo\
+foo=\${NOPE:-foo\\
     bar}`,
     expected: {foo: 'foo    bar'},
     desc: 'line continuation in unquoted expansion',
   },
   {
     input: `
-foo="\${NOPE:-foo\
+foo="\${NOPE:-foo\\
     bar}"`,
     expected: {foo: 'foo    bar'},
     desc: 'line continuation in double-quoted expansion',
@@ -126,7 +126,7 @@ foo='\${NOPE:-foo\\
   // nesting
   {
     input: `
-foo="\${NOPE:-'foo\
+foo="\${NOPE:-'foo\\
     bar'}"`,
     expected: {foo: `'foo    bar'`},
     desc: 'line continuation in single-quoted expansion in double-quoted string',

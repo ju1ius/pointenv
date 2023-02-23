@@ -124,8 +124,8 @@ class PosixParser extends Parser {
         case TokenKind.Escaped:
           this.consume()
           switch (token.value) {
-            // line continuation is allowed inside doudble-quoted strings
             case '\n':
+              // line continuation
               break
             case '"':
             case '$':
@@ -175,6 +175,18 @@ class PosixParser extends Parser {
       switch (token.kind) {
         case TokenKind.EOF:
           this.unexpected(token)
+        case TokenKind.Escaped: {
+          this.consume()
+          switch (token.value) {
+            case '\n':
+              // line continuation
+              break
+            default:
+              nodes.push(new RawValue(token.value))
+              break
+          }
+          break
+        }
         case TokenKind.SingleQuote: {
           if (quoted) {
             this.consume()
@@ -195,6 +207,7 @@ class PosixParser extends Parser {
           return new CompositeValue(nodes)
         default: {
           const value = this.accumulateUntil(
+            TokenKind.Escaped,
             TokenKind.Dollar,
             TokenKind.DoubleQuote,
             TokenKind.SingleQuote,

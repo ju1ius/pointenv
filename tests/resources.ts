@@ -13,7 +13,7 @@ export function read(relativePath: string) {
   return readFileSync(path(relativePath), {encoding: 'utf-8'})
 }
 
-export function json(path: string) {
+export function json<T>(path: string): T {
   return JSON.parse(read(path))
 }
 

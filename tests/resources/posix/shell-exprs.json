@@ -1,0 +1,47 @@
+[
+  {
+    "desc": "unquoted, concatenate quoting styles",
+    "input": "a'b'\"c\"$'d'$\"e\"",
+    "expected": "abc$d$e"
+  },
+  {
+    "desc": "quoted, concatenate quoting styles",
+    "input": "\"a'b'$'c'$\"d\"\"",
+    "expected": "a'b'$'c'$d"
+  },
+  {
+    "desc": "unquoted, line continuation",
+    "input": "a\\\nb",
+    "expected": "ab"
+  },
+  {
+    "desc": "double-quoted, line continuation + whitespace",
+    "input": "\"a\\\n  b\"",
+    "expected": "a  b"
+  },
+  {
+    "desc": "single-quoted, line continuation + whitespace",
+    "input": "'a\\\n  b'",
+    "expected": "a\\\n  b"
+  },
+  {
+    "desc": "line continuation in unquoted expansion",
+    "input": "${NOPE:-foo\\\n    bar}",
+    "expected": "foo    bar"
+  },
+  {
+    "desc": "line continuation in double-quoted expansion",
+    "input": "\"${NOPE:-foo\\\n    bar}\"",
+    "expected": "foo    bar"
+  },
+  {
+    "desc": "no line continuations in single-quoted expansions",
+    "input": "'${NOPE:-foo\\\n    bar}'",
+    "expected": "${NOPE:-foo\\\n    bar}"
+  },
+  {
+    "desc": "line continuation in single-quoted expansion in double-quoted string",
+    "input": "\"${NOPE:-'foo\\\n    bar'}\"",
+    "expected": "'foo    bar'"
+  }
+]
