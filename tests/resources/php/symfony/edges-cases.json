@@ -1,0 +1,20 @@
+[
+  {
+    "input": "FOO=0",
+    "expected": {
+      "FOO": "0"
+    }
+  },
+  {
+    "input": "FOO=false",
+    "expected": {
+      "FOO": "false"
+    }
+  },
+  {
+    "input": "FOO=null",
+    "expected": {
+      "FOO": "null"
+    }
+  }
+]

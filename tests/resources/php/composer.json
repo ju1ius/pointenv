@@ -1,0 +1,7 @@
+{
+  "name": "ju1ius/pointenv-tests",
+  "type": "project",
+  "require": {
+    "symfony/dotenv": "^6.2"
+  }
+}

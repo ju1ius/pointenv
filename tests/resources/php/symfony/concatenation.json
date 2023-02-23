@@ -1,0 +1,27 @@
+[
+  {
+    "input": "FOO='bar''foo'\n",
+    "expected": {
+      "FOO": "barfoo"
+    }
+  },
+  {
+    "input": "FOO='bar '' baz'",
+    "expected": {
+      "FOO": "bar  baz"
+    }
+  },
+  {
+    "input": "FOO=bar\nBAR='baz'\"$FOO\"",
+    "expected": {
+      "FOO": "bar",
+      "BAR": "bazbar"
+    }
+  },
+  {
+    "input": "FOO='bar '\\'' baz'",
+    "expected": {
+      "FOO": "bar ' baz"
+    }
+  }
+]

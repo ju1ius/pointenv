@@ -1,7 +1,6 @@
 import {ParseError} from '../errors.js'
 import {Assignment, AssignmentList, Operator} from '../ast.js'
 import {kindName, Token, Tokenizer, TokenKind, tokenName} from '../tokenize.js'
-import {EOF} from 'dns'
 
 
 export abstract class Parser {

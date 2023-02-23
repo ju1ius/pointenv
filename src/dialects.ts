@@ -3,6 +3,7 @@ import {AssignmentList} from './ast.js'
 export enum Dialect {
   Posix = 'posix',
   Compose = 'compose',
+  Symfony = 'symfony',
 }
 
 export type Parser = (input: string) => AssignmentList

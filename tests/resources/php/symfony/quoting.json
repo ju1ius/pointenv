@@ -1,0 +1,104 @@
+[
+  {
+    "input": "FOO=\"bar\"\n",
+    "expected": {
+      "FOO": "bar"
+    }
+  },
+  {
+    "input": "FOO=\"bar'foo\"\n",
+    "expected": {
+      "FOO": "bar'foo"
+    }
+  },
+  {
+    "input": "FOO='bar'\n",
+    "expected": {
+      "FOO": "bar"
+    }
+  },
+  {
+    "input": "FOO='bar\"foo'\n",
+    "expected": {
+      "FOO": "bar\"foo"
+    }
+  },
+  {
+    "input": "FOO=\"bar\\\"foo\"\n",
+    "expected": {
+      "FOO": "bar\"foo"
+    }
+  },
+  {
+    "input": "FOO=\"bar\\nfoo\"",
+    "expected": {
+      "FOO": "bar\nfoo"
+    }
+  },
+  {
+    "input": "FOO=\"bar\\rfoo\"",
+    "expected": {
+      "FOO": "bar\rfoo"
+    }
+  },
+  {
+    "input": "FOO='bar\\nfoo'",
+    "expected": {
+      "FOO": "bar\\nfoo"
+    }
+  },
+  {
+    "input": "FOO='bar\\rfoo'",
+    "expected": {
+      "FOO": "bar\\rfoo"
+    }
+  },
+  {
+    "input": "FOO='bar\nfoo'",
+    "expected": {
+      "FOO": "bar\nfoo"
+    }
+  },
+  {
+    "input": "FOO=\" FOO \"",
+    "expected": {
+      "FOO": " FOO "
+    }
+  },
+  {
+    "input": "FOO=\"  \"",
+    "expected": {
+      "FOO": "  "
+    }
+  },
+  {
+    "input": "PATH=\"c:\\\\\"",
+    "expected": {
+      "PATH": "c:\\"
+    }
+  },
+  {
+    "input": "FOO=\"bar\nfoo\"",
+    "expected": {
+      "FOO": "bar\nfoo"
+    }
+  },
+  {
+    "input": "FOO=BAR\\\"",
+    "expected": {
+      "FOO": "BAR\""
+    }
+  },
+  {
+    "input": "FOO=BAR\\'BAZ",
+    "expected": {
+      "FOO": "BAR'BAZ"
+    }
+  },
+  {
+    "input": "FOO=\\\"BAR",
+    "expected": {
+      "FOO": "\"BAR"
+    }
+  }
+]

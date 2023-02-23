@@ -8,7 +8,7 @@ export default (input: string) => {
   return parser.parse()
 }
 
-class PosixParser extends Parser {
+export class PosixParser extends Parser {
 
   constructor(tokenizer: Tokenizer) {
     super(tokenizer)

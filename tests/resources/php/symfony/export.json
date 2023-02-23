@@ -1,0 +1,14 @@
+[
+  {
+    "input": "export FOO=bar",
+    "expected": {
+      "FOO": "bar"
+    }
+  },
+  {
+    "input": "  export   FOO=bar",
+    "expected": {
+      "FOO": "bar"
+    }
+  }
+]

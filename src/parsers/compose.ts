@@ -1,6 +1,6 @@
 import {ParseError} from '../errors.js'
 import {Assignment, CompositeValue, RawValue, SimpleReference, Expression, ComplexReference} from '../ast.js'
-import {Token, Tokenizer, TokenKind} from '../tokenize.js'
+import {Tokenizer, TokenKind} from '../tokenize.js'
 import {Parser} from './common.js'
 
 export default (input: string) => {

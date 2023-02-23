@@ -1,0 +1,67 @@
+[
+  {
+    "input": "FOO=bar",
+    "expected": {
+      "FOO": "bar"
+    }
+  },
+  {
+    "input": " FOO=bar ",
+    "expected": {
+      "FOO": "bar"
+    }
+  },
+  {
+    "input": "FOO=",
+    "expected": {
+      "FOO": ""
+    }
+  },
+  {
+    "input": "FOO=\n\n\nBAR=bar",
+    "expected": {
+      "FOO": "",
+      "BAR": "bar"
+    }
+  },
+  {
+    "input": "FOO=  ",
+    "expected": {
+      "FOO": ""
+    }
+  },
+  {
+    "input": "FOO=\nBAR=bar",
+    "expected": {
+      "FOO": "",
+      "BAR": "bar"
+    }
+  },
+  {
+    "input": "\n\nFOO=bar\r\n\n",
+    "expected": {
+      "FOO": "bar"
+    }
+  },
+  {
+    "input": "FOO=bar\r\nBAR=foo",
+    "expected": {
+      "FOO": "bar",
+      "BAR": "foo"
+    }
+  },
+  {
+    "input": "FOO=bar\rBAR=foo",
+    "expected": {
+      "FOO": "bar",
+      "BAR": "foo"
+    }
+  },
+  {
+    "input": "FOO=bar\nBAR=foo",
+    "expected": {
+      "FOO": "bar",
+      "BAR": "foo"
+    }
+  }
+]

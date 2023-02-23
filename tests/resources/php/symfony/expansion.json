@@ -1,0 +1,151 @@
+[
+  {
+    "input": "FOO=BAR\nBAR=$FOO",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "BAR"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=\"$FOO\"",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "BAR"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR='$FOO'",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "$FOO"
+    }
+  },
+  {
+    "input": "FOO_BAR9=BAR\nBAR=$FOO_BAR9",
+    "expected": {
+      "FOO_BAR9": "BAR",
+      "BAR": "BAR"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=${FOO}Z",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "BARZ"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=$FOO}",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "BAR}"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=\\$FOO",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "$FOO"
+    }
+  },
+  {
+    "input": "FOO=\" \\$ \"",
+    "expected": {
+      "FOO": " $ "
+    }
+  },
+  {
+    "input": "FOO=\" $ \"",
+    "expected": {
+      "FOO": " $ "
+    }
+  },
+  {
+    "input": "BAR=$LOCAL",
+    "expected": {
+      "BAR": "local"
+    }
+  },
+  {
+    "input": "BAR=$REMOTE",
+    "expected": {
+      "BAR": "remote"
+    }
+  },
+  {
+    "input": "BAR=$SERVERVAR",
+    "expected": {
+      "BAR": "servervar"
+    }
+  },
+  {
+    "input": "FOO=$NOTDEFINED",
+    "expected": {
+      "FOO": ""
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=${FOO:-TEST}",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "BAR"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=${NOTDEFINED:-TEST}",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "TEST"
+    }
+  },
+  {
+    "input": "FOO=\nBAR=${FOO:-TEST}",
+    "expected": {
+      "FOO": "",
+      "BAR": "TEST"
+    }
+  },
+  {
+    "input": "FOO=\nBAR=$FOO:-TEST}",
+    "expected": {
+      "FOO": "",
+      "BAR": "TEST}"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=${FOO:=TEST}",
+    "expected": {
+      "FOO": "BAR",
+      "BAR": "BAR"
+    }
+  },
+  {
+    "input": "FOO=BAR\nBAR=${NOTDEFINED:=TEST}",
+    "expected": {
+      "FOO": "BAR",
+      "NOTDEFINED": "TEST",
+      "BAR": "TEST"
+    }
+  },
+  {
+    "input": "FOO=\nBAR=${FOO:=TEST}",
+    "expected": {
+      "FOO": "TEST",
+      "BAR": "TEST"
+    }
+  },
+  {
+    "input": "FOO=\nBAR=$FOO:=TEST}",
+    "expected": {
+      "FOO": "TEST",
+      "BAR": "TEST}"
+    }
+  },
+  {
+    "input": "FOO=foo\nFOOBAR=${FOO}${BAR}",
+    "expected": {
+      "FOO": "foo",
+      "FOOBAR": "foo"
+    }
+  }
+]

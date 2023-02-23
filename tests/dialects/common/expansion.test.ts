@@ -7,6 +7,7 @@ import {assertEval, TestCase} from '../utils.js'
 const dialects = [
   Dialect.Posix,
   Dialect.Compose,
+  Dialect.Symfony,
 ]
 
 describe.each(dialects)('%p parameter expansion', (dialect) => {

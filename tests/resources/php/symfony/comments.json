@@ -1,0 +1,59 @@
+[
+  {
+    "input": "#FOO=bar\nBAR=foo",
+    "expected": {
+      "BAR": "foo"
+    }
+  },
+  {
+    "input": "#FOO=bar # Comment\nBAR=foo",
+    "expected": {
+      "BAR": "foo"
+    }
+  },
+  {
+    "input": "FOO='bar foo' # Comment",
+    "expected": {
+      "FOO": "bar foo"
+    }
+  },
+  {
+    "input": "FOO='bar#foo' # Comment",
+    "expected": {
+      "FOO": "bar#foo"
+    }
+  },
+  {
+    "input": "# Comment\r\nFOO=bar\n# Comment\nBAR=foo",
+    "expected": {
+      "FOO": "bar",
+      "BAR": "foo"
+    }
+  },
+  {
+    "input": "FOO=bar # Another comment\nBAR=foo",
+    "expected": {
+      "FOO": "bar",
+      "BAR": "foo"
+    }
+  },
+  {
+    "input": "FOO=\n\n# comment\nBAR=bar",
+    "expected": {
+      "FOO": "",
+      "BAR": "bar"
+    }
+  },
+  {
+    "input": "FOO=NOT#COMMENT",
+    "expected": {
+      "FOO": "NOT#COMMENT"
+    }
+  },
+  {
+    "input": "FOO=  # Comment",
+    "expected": {
+      "FOO": ""
+    }
+  }
+]

@@ -5,6 +5,7 @@ import {assertEval, TestCase} from '../utils.js'
 const dialects = [
   Dialect.Posix,
   Dialect.Compose,
+  Dialect.Symfony,
 ]
 
 describe.each(dialects)('%p strings', (dialect) => {
@@ -24,4 +25,3 @@ describe.each(dialects)('%p strings', (dialect) => {
     assertEval(data, parser)
   })
 })
-
