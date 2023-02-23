@@ -84,7 +84,7 @@ class DockerParser extends Parser {
         }
         case TokenKind.Dollar:
           this.consume()
-          nodes.push(this.parseReference())
+          nodes.push(this.parsePossibleReference())
           break
         case TokenKind.Escaped:
           this.consume()
@@ -94,7 +94,7 @@ class DockerParser extends Parser {
               return new CompositeValue(nodes)
             case '$':
               nodes.push(new RawValue('\\'))
-              nodes.push(this.parseReference())
+              nodes.push(this.parsePossibleReference())
               break
             default:
               nodes.push(new RawValue(`\\${token.value}`))
@@ -151,19 +151,10 @@ class DockerParser extends Parser {
         case TokenKind.DoubleQuote:
           this.consume()
           return new CompositeValue(nodes)
-        case TokenKind.Dollar: {
+        case TokenKind.Dollar:
           this.consume()
-          switch (this.peek().kind) {
-            case TokenKind.Identifier:
-            case TokenKind.OpenBrace:
-              nodes.push(this.parseReference())
-              break
-            default:
-              nodes.push(new RawValue('$'))
-              break
-          }
+          nodes.push(this.parsePossibleReference(true))
           break
-        }
         case TokenKind.Escaped: {
           this.consume()
           let value = DQUOTE_ESCAPES[token.value]
@@ -183,11 +174,16 @@ class DockerParser extends Parser {
     }
   }
 
-  protected parseReference() {
-    let token = this.expectSome(TokenKind.Identifier, TokenKind.OpenBrace)
+  protected parsePossibleReference(quoted = false) {
+    let token = this.current()
+    if (!token.isOneOf(TokenKind.Identifier, TokenKind.OpenBrace)) {
+      return new RawValue('$')
+    }
     if (token.kind === TokenKind.Identifier) {
+      this.consume()
       return new SimpleReference(token.value)
     }
+    this.consume()
     const id = this.expect(TokenKind.Identifier).value
     if (this.current().kind === TokenKind.CloseBrace) {
       this.consume()
@@ -207,7 +203,7 @@ class DockerParser extends Parser {
           this.unexpected(token)
         case TokenKind.Dollar:
           this.consume()
-          nodes.push(this.parseReference())
+          nodes.push(this.parsePossibleReference())
           break
         case TokenKind.CloseBrace:
           this.consume()

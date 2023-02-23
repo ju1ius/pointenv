@@ -47,7 +47,7 @@ class PosixParser extends Parser {
           nodes.push(this.parseDoubleQuotedString())
           break
         case TokenKind.Dollar:
-          nodes.push(this.parseReference())
+          nodes.push(this.parsePossibleReference())
           break
         case TokenKind.Escaped: {
           // https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_02_01
@@ -118,22 +118,13 @@ class PosixParser extends Parser {
         case TokenKind.DoubleQuote:
           this.consume()
           return new CompositeValue(nodes)
-        case TokenKind.Dollar: {
-          switch (this.peek().kind) {
-            case TokenKind.Identifier:
-            case TokenKind.OpenBrace:
-              nodes.push(this.parseReference(true))
-              break
-            default:
-              this.consume()
-              nodes.push(new RawValue('$'))
-              break
-          }
+        case TokenKind.Dollar:
+          nodes.push(this.parsePossibleReference(true))
           break
-        }
         case TokenKind.Escaped:
           this.consume()
           switch (token.value) {
+            // line continuation is allowed inside doudble-quoted strings
             case '\n':
               break
             case '"':
@@ -155,17 +146,23 @@ class PosixParser extends Parser {
     }
   }
 
-  protected parseReference(quoted = false) {
+  protected parsePossibleReference(quoted = false) {
     this.expect(TokenKind.Dollar)
-    let token = this.expectSome(TokenKind.Identifier, TokenKind.OpenBrace)
+    let token = this.current()
+    if (!token.isOneOf(TokenKind.Identifier, TokenKind.OpenBrace)) {
+      return new RawValue('$')
+    }
     if (token.kind === TokenKind.Identifier) {
+      this.consume()
       return new SimpleReference(token.value)
     }
+    this.consume()
     const id = this.expect(TokenKind.Identifier).value
     if (this.current().kind === TokenKind.CloseBrace) {
       this.consume()
       return new SimpleReference(id)
     }
+
     const op = this.parseExpansionOperator()
     const rhs = this.parseDefaultExpression(quoted)
     return new ComplexReference(id, op, rhs)
@@ -191,7 +188,7 @@ class PosixParser extends Parser {
           nodes.push(this.parseDoubleQuotedString())
           break
         case TokenKind.Dollar:
-          nodes.push(this.parseReference(quoted))
+          nodes.push(this.parsePossibleReference(quoted))
           break
         case TokenKind.CloseBrace:
           this.consume()

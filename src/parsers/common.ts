@@ -1,6 +1,7 @@
 import {ParseError} from '../errors.js'
 import {Assignment, AssignmentList, Operator} from '../ast.js'
 import {kindName, Token, Tokenizer, TokenKind, tokenName} from '../tokenize.js'
+import {EOF} from 'dns'
 
 
 export abstract class Parser {
@@ -90,10 +91,7 @@ export abstract class Parser {
     let value = ''
     while (true) {
       const token = this.current()
-      if (token.kind === TokenKind.EOF) {
-        return value
-      }
-      if (until.some(kind => token.kind === kind)) {
+      if (token.isOneOf(TokenKind.EOF, ...until)) {
         return value
       }
       this.consume()
@@ -104,10 +102,7 @@ export abstract class Parser {
   protected skipUntil(...until: TokenKind[]) {
     while (true) {
       const token = this.current()
-      if (token.kind === TokenKind.EOF) {
-        return
-      }
-      if (until.some(kind => token.kind === kind)) {
+      if (token.isOneOf(TokenKind.EOF, ...until)) {
         return
       }
       this.consume()
@@ -139,7 +134,7 @@ export abstract class Parser {
 
   protected expectSome(...kinds: TokenKind[]) {
     const token = this.current()
-    if (!kinds.some(kind => token.kind === kind)) {
+    if (!token.isOneOf(...kinds)) {
       this.unexpected(token, ...kinds)
     }
     this.consume()

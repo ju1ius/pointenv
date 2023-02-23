@@ -168,11 +168,6 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
       error: ParseError,
       desc: 'unterminate braced expression',
     },
-    {
-      input: 'a="a $ b"',
-      expected: {a: 'a $ b'},
-      desc: 'lone dollar in quoted string is not an expansion',
-    }
   ])('$desc', async (data) => {
     const parser = await getParser(dialect)
     assertEval(data, parser)

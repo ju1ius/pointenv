@@ -49,6 +49,14 @@ export class Token {
     public readonly line: number,
     public readonly col: number,
   ) {}
+
+  is(kind: TokenKind) {
+    return this.kind === kind
+  }
+
+  isOneOf(...kinds: TokenKind[]) {
+    return kinds.some(k => this.kind === k)
+  }
 }
 
 const CHAR_TOKENS: Record<string, TokenKind> = {

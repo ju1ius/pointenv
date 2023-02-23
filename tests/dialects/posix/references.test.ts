@@ -4,6 +4,21 @@ import {assertEval, type TestCase} from '../utils.js'
 
 test.each<TestCase>([
   {
+    input: 'a="a $ b"',
+    expected: {a: 'a $ b'},
+    desc: 'lone dollar in quoted string is not an expansion',
+  },
+  {
+    input: `a=a\$'b'\$"c"`,
+    expected: {a: 'a$b$c'},
+    desc: 'lone dollar in unquoted string is not an expansion',
+  },
+])('$desc', data => {
+  assertEval(data, parse)
+})
+
+test.each<TestCase>([
+  {
     input: `a=1 b=$a c="$a" d='$a'`,
     expected: {a: '1', b: '1', c: '1', d: '$a'},
     scope: {a: '0'},
