@@ -146,7 +146,32 @@ test.each<TestCase>([
   {
     input: `a='0\\n1\\t2'`,
     expected: {a: '0\\n1\\t2'},
-    desc: 'Single-quoted string does not interpret escaped characters.',
+    desc: 'Single-quoted strings do not interpret escaped characters.',
+  },
+  {
+    input: `a='foo\\\n  bar'`,
+    expected: {a: 'foo\\\n  bar'},
+    desc: 'Single-quoted strings do not interpret line continuations.',
+  },
+  {
+    input: `a=foo\\\nbar\\\nbaz`,
+    expected: {a: 'foobarbaz'},
+    desc: 'Unquoted strings interpret line continuations.',
+  },
+  {
+    input: `a=foo\\\n  bar`,
+    error: ParseError,
+    desc: 'Unquoted strings do not allow whitespace after line continuation.',
+  },
+  {
+    input: `a="foo\\\n  bar"`,
+    expected: {a: 'foo  bar'},
+    desc: 'Double-quoted strings interpret line continuations.',
+  },
+  {
+    input: `a="foo\\"bar\\$baz\\\\qux"`,
+    expected: {a: 'foo"bar$baz\\qux'},
+    desc: 'Double-quoted strings interpret special escaped chars: ["$\\].',
   },
 ])('quoting: $desc', data => {
   assertEval(data, parse)

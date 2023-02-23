@@ -118,16 +118,27 @@ class PosixParser extends Parser {
         case TokenKind.DoubleQuote:
           this.consume()
           return new CompositeValue(nodes)
-        case TokenKind.Dollar:
-          nodes.push(this.parseReference())
+        case TokenKind.Dollar: {
+          switch (this.peek().kind) {
+            case TokenKind.Identifier:
+            case TokenKind.OpenBrace:
+              nodes.push(this.parseReference())
+              break
+            default:
+              this.consume()
+              nodes.push(new RawValue('$'))
+              break
+          }
           break
+        }
         case TokenKind.Escaped:
           this.consume()
           switch (token.value) {
+            case '\n':
+              break
             case '"':
             case '$':
             case '\\':
-            case '\n':
               nodes.push(new RawValue(token.value))
               break
             default:

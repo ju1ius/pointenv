@@ -60,3 +60,29 @@ test.each<TestCase>([
 ])('complex references: $desc', data => {
   assertEval(data, parse)
 })
+
+test.each<TestCase>([
+  {
+    input: `
+foo=\${NOPE:-foo\
+    bar}`,
+    expected: {foo: 'foo    bar'},
+    desc: 'line continuation in unquoted expansion',
+  },
+  {
+    input: `
+foo="\${NOPE:-foo\
+    bar}"`,
+    expected: {foo: 'foo    bar'},
+    desc: 'line continuation in double-quoted expansion',
+  },
+  {
+    input: `
+foo='\${NOPE:-foo\
+    bar}'`,
+    expected: {foo: 'foo\\\n    bar'},
+    desc: 'no line continuations in single-quoted expansions',
+  },
+])('whitespace: $desc', (data) => {
+  assertEval(data, parse)
+})
