@@ -151,10 +151,19 @@ class DockerParser extends Parser {
         case TokenKind.DoubleQuote:
           this.consume()
           return new CompositeValue(nodes)
-        case TokenKind.Dollar:
+        case TokenKind.Dollar: {
           this.consume()
-          nodes.push(this.parseReference())
+          switch (this.peek().kind) {
+            case TokenKind.Identifier:
+            case TokenKind.OpenBrace:
+              nodes.push(this.parseReference())
+              break
+            default:
+              nodes.push(new RawValue('$'))
+              break
+          }
           break
+        }
         case TokenKind.Escaped: {
           this.consume()
           let value = DQUOTE_ESCAPES[token.value]

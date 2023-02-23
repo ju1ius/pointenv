@@ -4,7 +4,7 @@ import {assertEval, TestCase} from '../utils.js'
 
 const dialects = [
   Dialect.Posix,
-  Dialect.Docker,
+  Dialect.Compose,
 ]
 
 describe.each(dialects)('%p export', (dialect) => {
