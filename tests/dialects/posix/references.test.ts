@@ -63,6 +63,31 @@ test.each<TestCase>([
 
 test.each<TestCase>([
   {
+    input: `a=\${FOO:-a'b'"c"}`,
+    expected: {a: 'abc'},
+    desc: 'concatenation of quoting styles in unquoted string',
+  },
+  {
+    input: `a="\${FOO:-a'b'"c"}"`,
+    expected: {a: `a'b'c`},
+    desc: 'concatenation of quoting styles in double-quoted string',
+  },
+  {
+    input: `a=\${FOO:-a'b'"\${BAR:-c'd'"e"}"}`,
+    expected: {a: `abc'd'e`},
+    desc: 'concatenation of quoting styles in double-quoted string in unquoted string',
+  },
+  {
+    input: `a="\${FOO:-a'b'"c"\${BAR:-d'e'"f"}}"`,
+    expected: {a: `a'b'cd'e'f`},
+    desc: 'concatenation of quoting styles in unquoted string in double-quoted string',
+  },
+])('quoting: $desc', (data) => {
+  assertEval(data, parse)
+})
+
+test.each<TestCase>([
+  {
     input: `
 foo=\${NOPE:-foo\
     bar}`,
@@ -78,10 +103,18 @@ foo="\${NOPE:-foo\
   },
   {
     input: `
-foo='\${NOPE:-foo\
+foo='\${NOPE:-foo\\
     bar}'`,
-    expected: {foo: 'foo\\\n    bar'},
+    expected: {foo: '${NOPE:-foo\\\n    bar}'},
     desc: 'no line continuations in single-quoted expansions',
+  },
+  // nesting
+  {
+    input: `
+foo="\${NOPE:-'foo\
+    bar'}"`,
+    expected: {foo: `'foo    bar'`},
+    desc: 'line continuation in single-quoted expansion in double-quoted string',
   },
 ])('whitespace: $desc', (data) => {
   assertEval(data, parse)
