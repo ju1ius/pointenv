@@ -69,6 +69,14 @@ function loadDataSet() {
     {
       input: `"\${NOPE:-'foo\\\n    bar'}"`,
       desc: 'line continuation in single-quoted expansion in double-quoted string'
-    }
+    },
+    {
+      input: `\${NOPE:-fo\\o}`,
+      desc: 'unknown escaped char in unquoted expansion'
+    },
+    {
+      input: `"\${NOPE:-fo\\o}"`,
+      desc: 'unknown escaped char in quoted expansion'
+    },
   ]
 }

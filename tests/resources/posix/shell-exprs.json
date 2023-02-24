@@ -53,5 +53,15 @@
     "desc": "line continuation in single-quoted expansion in double-quoted string",
     "input": "\"${NOPE:-'foo\\\n    bar'}\"",
     "expected": "'foo    bar'"
+  },
+  {
+    "desc": "unknown escaped char in unquoted expansion",
+    "input": "${NOPE:-fo\\o}",
+    "expected": "foo"
+  },
+  {
+    "desc": "unknown escaped char in quoted expansion",
+    "input": "\"${NOPE:-fo\\o}\"",
+    "expected": "fo\\o"
   }
 ]

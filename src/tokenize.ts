@@ -50,10 +50,6 @@ export class Token {
     public readonly col: number,
   ) {}
 
-  is(kind: TokenKind) {
-    return this.kind === kind
-  }
-
   isOneOf(...kinds: TokenKind[]) {
     return kinds.some(k => this.kind === k)
   }

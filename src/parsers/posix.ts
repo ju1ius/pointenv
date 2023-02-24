@@ -182,7 +182,7 @@ export class PosixParser extends Parser {
               // line continuation
               break
             default:
-              nodes.push(new RawValue(token.value))
+              nodes.push(new RawValue(quoted ? `\\${token.value}` : token.value))
               break
           }
           break
