@@ -11,13 +11,19 @@ export default (input: string) => {
 
 const ANYCRLF_RX = /\r\n|\r/g
 
-const DQUOTE_ESCAPES: Record<string, string> = {
-  '"': '"',
-  'r': '\r',
-  'n': '\n',
-  '\\': '\\',
-  '$': '$',
-}
+const UNQUOTED_ESCAPES = new Map<string, string>([
+  ['"', '"'],
+  ["'", "'"],
+  ['$', '$'],
+  ['\\', '\\'],
+])
+const DQUOTED_ESCAPES = new Map<string, string>([
+  ['"', '"'],
+  ['r', '\r'],
+  ['n', '\n'],
+  ['\\', '\\'],
+  ['$', '$'],
+])
 
 const preprocess = (input: string) => {
   return input.replace(ANYCRLF_RX, '\n')
@@ -54,6 +60,53 @@ class SymfonyParser extends PosixParser {
     }
   }
 
+  protected parseAssignmentValue() {
+    const nodes: Expression[] = []
+    while (true) {
+      const token = this.current()
+      switch (token.kind) {
+        case TokenKind.EOF:
+        case TokenKind.Newline:
+        case TokenKind.Whitespace:
+          return new CompositeValue(nodes)
+        case TokenKind.SingleQuote:
+          nodes.push(this.parseSingleQuotedString())
+          break
+        case TokenKind.DoubleQuote:
+          nodes.push(this.parseDoubleQuotedString())
+          break
+        case TokenKind.Dollar:
+          nodes.push(this.parsePossibleReference())
+          break
+        case TokenKind.Escaped: {
+          if (token.value === '\n') {
+            this.unexpected(token)
+          }
+          this.consume()
+          let value = UNQUOTED_ESCAPES.get(token.value)
+          if (value) {
+            nodes.push(new RawValue(value))
+          } else {
+            nodes.push(new RawValue(`\\${token.value}`))
+          }
+          break
+        }
+        default: {
+          const value = this.accumulateUntil(
+            TokenKind.Newline,
+            TokenKind.Whitespace,
+            TokenKind.Dollar,
+            TokenKind.DoubleQuote,
+            TokenKind.SingleQuote,
+            TokenKind.Escaped,
+          )
+          nodes.push(new RawValue(value))
+          break
+        }
+      }
+    }
+  }
+
   protected parseDoubleQuotedString() {
     this.expect(TokenKind.DoubleQuote)
     const nodes: Expression[] = []
@@ -70,7 +123,7 @@ class SymfonyParser extends PosixParser {
           break
         case TokenKind.Escaped: {
           this.consume()
-          let value = DQUOTE_ESCAPES[token.value]
+          let value = DQUOTED_ESCAPES.get(token.value)
           if (value) {
             nodes.push(new RawValue(value))
           } else {

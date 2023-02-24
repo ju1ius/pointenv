@@ -8,16 +8,16 @@ export default (input: string) => {
   return parser.parse()
 }
 
-const DQUOTE_ESCAPES: Record<string, string> = {
-  'f': '\f',
-  'n': '\n',
-  'r': '\r',
-  't': '\t',
-  'v': '\v',
-  '\\': '\\',
-  '$': '$',
-  '"': '"',
-}
+const DQUOTED_ESCAPES = new Map<string, string>([
+  ['f', '\f'],
+  ['n', '\n'],
+  ['r', '\r'],
+  ['t', '\t'],
+  ['v', '\v'],
+  ['\\', '\\'],
+  ['$', '$'],
+  ['"', '"'],
+])
 
 class DockerParser extends Parser {
 
@@ -157,7 +157,7 @@ class DockerParser extends Parser {
           break
         case TokenKind.Escaped: {
           this.consume()
-          let value = DQUOTE_ESCAPES[token.value]
+          let value = DQUOTED_ESCAPES.get(token.value)
           if (value) {
             nodes.push(new RawValue(value))
           } else {

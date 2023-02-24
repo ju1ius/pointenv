@@ -29,6 +29,11 @@ describe('symfony dialect', () => {
       input: 'a= 1',
       error: ParseError,
     },
+    {
+      desc: 'no line continuation support',
+      input: 'a=1\\\n2',
+      error: ParseError,
+    },
   ])('$desc', (data) => {
     assertEval(data, parse)
   })
