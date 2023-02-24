@@ -1,13 +1,23 @@
 [
   {
+    "desc": "unknown escaped char in unquoted value",
+    "input": "a\\b",
+    "expected": "ab"
+  },
+  {
+    "desc": "unknown escaped char in doube-quoted value",
+    "input": "\"a\\b\"",
+    "expected": "a\\b"
+  },
+  {
     "desc": "unquoted, concatenate quoting styles",
     "input": "a'b'\"c\"$'d'$\"e\"",
     "expected": "abc$d$e"
   },
   {
     "desc": "quoted, concatenate quoting styles",
-    "input": "\"a'b'$'c'$\"d\"\"",
-    "expected": "a'b'$'c'$d"
+    "input": "\"a'b'$'c'$\\\"d\\\"\"",
+    "expected": "a'b'$'c'$\"d\""
   },
   {
     "desc": "unquoted, line continuation",
