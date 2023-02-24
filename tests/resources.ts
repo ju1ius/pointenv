@@ -1,7 +1,7 @@
-import nodePath from 'node:path'
-import {readFileSync} from 'node:fs'
-import {fileURLToPath} from 'node:url'
 import nodeGlob from 'glob'
+import {readFileSync} from 'node:fs'
+import nodePath from 'node:path'
+import {fileURLToPath} from 'node:url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 

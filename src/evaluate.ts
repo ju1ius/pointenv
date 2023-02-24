@@ -1,5 +1,5 @@
-import {UndefinedVariable} from './errors.js'
 import {AssignmentList, CompositeValue, Expression, RawValue, Reference, SimpleReference} from './ast.js'
+import {UndefinedVariable} from './errors.js'
 
 export type Scope = Map<string, string>
 

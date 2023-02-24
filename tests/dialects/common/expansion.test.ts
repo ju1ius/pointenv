@@ -1,4 +1,3 @@
-
 import {Dialect, getParser} from '../../../src/dialects.js'
 import {ParseError, UndefinedVariable} from '../../../src/errors.js'
 

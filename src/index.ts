@@ -1,4 +1,4 @@
-import {Scope} from './evaluate.js'
+import {type Scope} from './evaluate.js'
 import load, {type LoadOptions} from './load.js'
 
 export {Dialect} from './dialects.js'

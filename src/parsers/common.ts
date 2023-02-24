@@ -1,5 +1,5 @@
-import {ParseError} from '../errors.js'
 import {Assignment, AssignmentList, Operator} from '../ast.js'
+import {ParseError} from '../errors.js'
 import {kindName, Token, Tokenizer, TokenKind, tokenName} from '../tokenize.js'
 
 

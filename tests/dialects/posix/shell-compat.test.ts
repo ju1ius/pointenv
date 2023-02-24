@@ -1,6 +1,6 @@
-import * as resources from '../../resources.js'
-import parse from '../../../src/parsers/posix.js'
 import evaluate from '../../../src/evaluate.js'
+import parse from '../../../src/parsers/posix.js'
+import * as resources from '../../resources.js'
 
 
 describe('shell compatibility', () => {

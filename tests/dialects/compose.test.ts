@@ -1,9 +1,10 @@
-import path from 'node:path'
 import {readFileSync} from 'node:fs'
+import path from 'node:path'
+
 import * as resources from '../resources.js'
 
-import parse from '../../src/parsers/compose.js'
 import evaluate from '../../src/evaluate.js'
+import parse from '../../src/parsers/compose.js'
 
 const loadCases = () => {
   type DataSet = Array<{key: string, value: string}>

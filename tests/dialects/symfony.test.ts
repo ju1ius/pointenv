@@ -1,10 +1,10 @@
-import path from 'node:path'
 import {readFileSync} from 'node:fs'
+import path from 'node:path'
 
+import {ParseError} from '../../src/errors.js'
+import parse from '../../src/parsers/symfony.js'
 import * as resources from '../resources.js'
 import {assertEval, TestCase} from './utils.js'
-import parse from '../../src/parsers/symfony.js'
-import {ParseError} from '../../src/errors.js'
 
 const loadCases = () => {
   return resources.glob('php/symfony/*.env').map((file) => {

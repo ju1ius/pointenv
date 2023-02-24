@@ -1,5 +1,5 @@
-import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
 import {Parser} from '../../src/dialects.js'
+import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
 
 type TestInput = {
   desc: string

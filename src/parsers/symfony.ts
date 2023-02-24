@@ -1,5 +1,5 @@
+import {Assignment, CompositeValue, Expression, RawValue} from '../ast.js'
 import {ParseError} from '../errors.js'
-import {Assignment, CompositeValue, RawValue, Expression} from '../ast.js'
 import {Tokenizer, TokenKind} from '../tokenize.js'
 import {PosixParser} from './posix.js'
 
