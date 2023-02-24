@@ -27,7 +27,7 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build
-    - run: npm run test
+    - run: npm run coverage
     - name: Send coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

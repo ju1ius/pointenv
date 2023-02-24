@@ -19,7 +19,6 @@ const config = {
       },
     ],
   },
-  collectCoverage: isCI,
   collectCoverageFrom: ['./src/**'],
   coverageReporters: isCI ? ['text', 'cobertura'] : ['html'],
 }
