@@ -142,9 +142,20 @@ export abstract class Parser {
 
   protected unexpected(token: Token, ...expectedKinds: TokenKind[]): never {
     const name = tokenName(token)
-    const {line, col} = token
-    const expected = expectedKinds.map(kindName).join(', ')
-    throw new ParseError(`Unexpected token ${name}@${line}:${col}, expected: ${expected}`)
+    const {value, line, col} = token
+    const message = `Unexpected token ${name}@${line}:${col} (${value})`
+    let expected = ''
+    switch (expectedKinds.length) {
+      case 0:
+        break
+      case 1:
+        expected = ', expected: ' + kindName(expectedKinds[0])
+        break
+      default:
+        expected = ', expected one of: ' + expectedKinds.map(kindName).join(', ')
+        break
+    }
+    throw new ParseError(message + expected)
   }
 
   private fillBuffer() {
