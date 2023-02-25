@@ -4,9 +4,7 @@ import load, {type LoadOptions} from './load.js'
 export {Dialect} from './dialects.js'
 export {load, type LoadOptions}
 
-export type Options = LoadOptions & {
-  override?: boolean
-}
+export type Options = LoadOptions
 
 export default async (paths: string[], options: Options = {}) => {
   const scope = await load(paths, options)

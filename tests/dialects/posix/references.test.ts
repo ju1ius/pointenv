@@ -21,14 +21,20 @@ test.each<TestCase>([
   {
     input: `a=1 b=$a c="$a" d='$a'`,
     expected: {a: '1', b: '1', c: '1', d: '$a'},
+    scope: {},
+    desc: 'picks value from local scope when not present in global',
+  },
+  {
+    input: `a=1 b=$a c="$a" d='$a'`,
+    expected: {a: '0', b: '0', c: '0', d: '$a'},
     scope: {a: '0'},
-    desc: 'picks value from local scope',
+    desc: 'golbal scope wins over local scope',
   },
   {
     input: `a=$b b="$b" c='$b'`,
     expected: {a: '1', b: '1', c: '$b'},
     scope: {b: '1'},
-    desc: 'picks value from global scope',
+    desc: 'picks value from global scope when not present in local',
   },
   {
     input: `a=1 b=\${a} c="\${a}" d='\${a}'`,
@@ -53,7 +59,7 @@ test.each<TestCase>([
   {
     input: 'a=${a:-0} b=${b:-} c=${c:-1}',
     expected: {a: '42', b: '', c: '1'},
-    scope: {a: '42', c: ''},
+    scope: {a: '42'},
     desc: ':- operator falls back to provided default',
   },
   {

@@ -8,7 +8,7 @@ export class AssignmentList {
 export class Assignment {
   constructor(
     public readonly id: string,
-    public rhs: AnyValue | null,
+    public rhs: Expression | null,
   ) {
   }
 }
@@ -44,19 +44,21 @@ export class ComplexReference {
   constructor(
     public readonly id: string,
     public readonly op: Operator,
-    public readonly rhs: CompositeValue,
+    public rhs: Expression,
   ) {
   }
 }
-
-export type AnyValue =
-  | RawValue
-  | CompositeValue
 
 export type Reference =
   | SimpleReference
   | ComplexReference
 
 export type Expression =
-  | AnyValue
+  | RawValue
+  | CompositeValue
   | Reference
+
+export type Node =
+  | AssignmentList
+  | Assignment
+  | Expression

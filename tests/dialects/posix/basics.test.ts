@@ -111,7 +111,7 @@ test.each<TestCase>([
   {
     input: `a='b'\\''c'`,
     expected: {a: "b'c"},
-    desc: `escaped single-quote in singe-quoted string`,
+    desc: `escaped single-quote in unquoted string`,
   },
   {
     input: `a='b\\'c'`,
