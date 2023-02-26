@@ -8,15 +8,14 @@ export type Options = LoadOptions
 
 export default async (paths: string[], options: Options = {}) => {
   const scope = await load(paths, options)
-  return applyScope(scope, options.override)
+  applyScope(scope, options.override)
+  return scope
 }
 
 function applyScope(scope: Scope, override = false) {
-  const applied = new Map<string, string>()
   for (const [key, value] of scope.entries()) {
     if (override || process.env[key] === undefined) {
-      applied.set(key, process.env[key] = value)
+      process.env[key] = value
     }
   }
-  return applied
 }

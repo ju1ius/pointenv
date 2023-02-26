@@ -36,7 +36,7 @@ describe('pointenv', () => {
     {
       desc: 'does not modify process.env when a variable is defined',
       files: {'one': 'TEST_IS_DEFINED=nope'},
-      expected: {},
+      expected: {TEST_IS_DEFINED: 'yep'},
     },
     {
       desc: 'modifies process.env when a variable is defined but override is true',
