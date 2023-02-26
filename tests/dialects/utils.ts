@@ -5,6 +5,7 @@ type TestInput = {
   desc: string
   input: string
   scope?: Scope | NodeJS.Dict<string>
+  override?: boolean
 }
 
 type ExceptionClass = new () => Error
@@ -22,14 +23,14 @@ export type TestCase =
   | ErrorCase
 
 
-export const assertEval = ({input, scope = new Map(), ...rest}: TestCase, parse: Parser) => {
+export const assertEval = ({input, scope = new Map(), override, ...rest}: TestCase, parse: Parser) => {
   if ('error' in rest) {
     expect(() => {
       const ast = parse(input)
-      evaluate(ast, toScope(scope))
+      evaluate(ast, toScope(scope), override)
     }).toThrow(rest.error)
   } else {
     const ast = parse(input)
-    expect(evaluate(ast, toScope(scope))).toEqual(toScope(rest.expected))
+    expect(evaluate(ast, toScope(scope), override)).toEqual(toScope(rest.expected))
   }
 }

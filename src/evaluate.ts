@@ -2,17 +2,9 @@ import {AssignmentList, CompositeValue, Expression, RawValue, Reference, SimpleR
 import {UndefinedVariable} from './errors.js'
 
 export type Scope = Map<string, string>
-export type Handlers = {
-  missingValue?: (key: string, env: Scope, scope: Scope) => string | undefined
-}
-export type EvaluateOptions = {
-  scope: Scope
-  override: boolean
-  handlers: Handlers
-}
 
-export default (list: AssignmentList, scope: Scope = new Map(), override = false, handlers: Handlers = {}) => {
-  return new Evaluator(list, scope, override, handlers).evaluate()
+export default (list: AssignmentList, scope: Scope = new Map(), override = false) => {
+  return new Evaluator(list, scope, override).evaluate()
 }
 
 export function toScope(input: Scope | Record<string, string | undefined>): Scope {
@@ -37,7 +29,6 @@ class Evaluator {
     private readonly list: AssignmentList,
     private readonly env: Scope,
     private readonly overrideEnv: boolean,
-    private readonly handlers: Handlers,
   ) {}
 
   evaluate() {
@@ -104,13 +95,9 @@ class Evaluator {
       case '?':
       case ':?': {
         if (!test(value)) return value ?? ''
-        if (this.handlers.missingValue) {
-          value = this.handlers.missingValue(key, this.env, this.scope)
-          if (!test(value)) return value ?? ''
-        }
         let message = this.evaluateExpression(ref.rhs)
         if (!message) {
-          message = `Missing value for variable "${key}"`
+          message = `Missing required value for variable "${key}"`
         }
         throw new UndefinedVariable(message)
       }

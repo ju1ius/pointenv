@@ -164,9 +164,14 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
 
   test.each<TestCase>([
     {
+      input: 'a=${a?}',
+      error: UndefinedVariable,
+      desc: '? operator works without explicit error message',
+    },
+    {
       input: 'a=${b:-foo',
       error: ParseError,
-      desc: 'unterminate braced expression',
+      desc: 'error: unterminated braced expression',
     },
   ])('$desc', async (data) => {
     const parser = await getParser(dialect)

@@ -63,6 +63,13 @@ test.each<TestCase>([
     desc: ':- operator falls back to provided default',
   },
   {
+    input: 'a=${a:-42}',
+    expected: {a: '42'},
+    scope: {a: ''},
+    override: true,
+    desc: ':- operator overrides env if specified',
+  },
+  {
     input: `a=\${a:-"foo\${b:-"\${c:-'nope'}"}baz"}`,
     expected: {a: 'foobarbaz'},
     scope: {c: 'bar'},
