@@ -1,5 +1,5 @@
 import evaluate from '../../../src/evaluate.js'
-import parse from '../../../src/parsers/posix.js'
+import parse from '../../../src/dialects/posix.js'
 import * as resources from '../../resources.js'
 
 

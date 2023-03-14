@@ -9,6 +9,6 @@ export enum Dialect {
 export type Parser = (input: string) => AssignmentList
 
 export async function getParser(dialect: Dialect): Promise<Parser> {
-  const module = await import(`./parsers/${dialect}.js`)
+  const module = await import(`./dialects/${dialect}.js`)
   return module.default
 }

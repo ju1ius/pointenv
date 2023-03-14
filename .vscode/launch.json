@@ -23,6 +23,21 @@
       // "outFiles": [
       //   "${workspaceFolder}/**/*.js"
       // ]
+    },
+    {
+      "type": "node",
+      "name": "Attach to node process",
+      "request": "attach",
+      "processId": "${command:PickProcess}",
+      "port": 9229,
+      "sourceMaps": true,
+      "smartStep": true,
+      // "outFiles": [
+      //   "${workspaceFolder}/scripts/build/**/*.js"
+      // ],
+      "skipFiles": [
+        "<node_internals>/**/*"
+      ]
     }
   ]
 }

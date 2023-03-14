@@ -8,28 +8,14 @@ export class AssignmentList {
 export class Assignment {
   constructor(
     public readonly id: string,
-    public rhs: Expression | null,
+    public rhs: Expression[],
   ) {
   }
 }
 
-export class RawValue {
+export class Characters {
   constructor(
     public readonly value: string
-  ) {
-  }
-}
-
-export class CompositeValue {
-  constructor(
-    public readonly nodes: Expression[]
-  ) {
-  }
-}
-
-export class SimpleReference {
-  constructor(
-    public readonly id: string,
   ) {
   }
 }
@@ -40,23 +26,18 @@ export type Operator =
   | '+' | ':+'
   | '?' | ':?'
 
-export class ComplexReference {
+export class Expansion {
   constructor(
     public readonly id: string,
-    public readonly op: Operator,
-    public rhs: Expression,
+    public readonly op: Operator = '-',
+    public rhs: Expression[] = [],
   ) {
   }
 }
 
-export type Reference =
-  | SimpleReference
-  | ComplexReference
-
 export type Expression =
-  | RawValue
-  | CompositeValue
-  | Reference
+  | Characters
+  | Expansion
 
 export type Node =
   | AssignmentList

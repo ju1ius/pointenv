@@ -4,7 +4,7 @@ import path from 'node:path'
 import * as resources from '../resources.js'
 
 import evaluate from '../../src/evaluate.js'
-import parse from '../../src/parsers/compose.js'
+import parse from '../../src/dialects/compose.js'
 
 const loadCases = () => {
   type DataSet = Array<{key: string, value: string}>

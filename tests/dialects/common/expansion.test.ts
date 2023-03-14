@@ -17,13 +17,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter:-word}',
       expected: {result: 'ok'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute parameter',
     },
     {
       input: 'result=${parameter:-word}',
       expected: {result: 'word'},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => substitute word',
     },
     {
@@ -35,13 +35,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter-word}',
       expected: {result: 'ok'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute parameter',
     },
     {
       input: 'result=${parameter-word}',
       expected: {result: ''},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => substitute null',
     },
     {
@@ -53,13 +53,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter:=word}',
       expected: {result: 'ok'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute parameter',
     },
     {
       input: 'result=${parameter:=word}',
       expected: {result: 'word', parameter: 'word'},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => assign word',
     },
     {
@@ -71,13 +71,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter=word}',
       expected: {result: 'ok'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute parameter',
     },
     {
       input: 'result=${parameter=word}',
       expected: {result: ''},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => substitute null',
     },
     {
@@ -89,13 +89,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter:?word}',
       expected: {result: 'ok'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute parameter',
     },
     {
       input: 'result=${parameter:?word}',
       error: UndefinedVariable,
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => error',
     },
     {
@@ -107,13 +107,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter?word}',
       expected: {result: 'ok'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute parameter',
     },
     {
       input: 'result=${parameter?word}',
       expected: {result: ''},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => substitute null',
     },
     {
@@ -125,13 +125,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter:+word}',
       expected: {result: 'word'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute word',
     },
     {
       input: 'result=${parameter:+word}',
       expected: {result: ''},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => substitute null',
     },
     {
@@ -143,13 +143,13 @@ describe.each(dialects)('%p parameter expansion', (dialect) => {
     {
       input: 'result=${parameter+word}',
       expected: {result: 'word'},
-      scope: {parameter: 'ok'},
+      env: {parameter: 'ok'},
       desc: 'parameter is set and not null => substitute word',
     },
     {
       input: 'result=${parameter+word}',
       expected: {result: 'word'},
-      scope: {parameter: ''},
+      env: {parameter: ''},
       desc: 'parameter is set but null => substitute word',
     },
     {

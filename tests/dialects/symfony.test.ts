@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs'
 import path from 'node:path'
 
 import {ParseError} from '../../src/errors.js'
-import parse from '../../src/parsers/symfony.js'
+import parse from '../../src/dialects/symfony.js'
 import * as resources from '../resources.js'
 import {assertEval, TestCase} from './utils.js'
 

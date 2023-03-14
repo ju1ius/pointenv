@@ -12,7 +12,7 @@ npm install @ju1ius/pointenv
 
 ## Supported dialects
 
-* [posix](https://github.com/ko1nksm/shdotenv/blob/main/docs/specification.md)
+* [posix](https://github.com/php-xdg/dotenv-spec)
 * [docker-compose](https://docs.docker.com/compose/environment-variables/env-file/)
 * [symfony/dotenv](https://github.com/symfony/dotenv)
 
@@ -20,7 +20,6 @@ The formal `dotenv` syntax for this project is `posix` only.
 
 The `posix` dialect is a subset of the POSIX shell syntax
 and is compatible with shell scripts.
-It was first introduced by the [shdotenv](https://github.com/ko1nksm/shdotenv) project.
 
 Support for other `dotenv` syntax dialects is included for interoperability purposes.
 Compatibility will be improved gradually, but is not always 100% possible (nor always desirable).

@@ -1,4 +1,4 @@
-import {AssignmentList, CompositeValue, Expression, RawValue, Reference, SimpleReference} from './ast.js'
+import {AssignmentList, Expression, Characters, Expansion} from './ast.js'
 import {UndefinedVariable} from './errors.js'
 
 export type Scope = Map<string, string>
@@ -38,64 +38,54 @@ class Evaluator {
         this.scope.set(key, this.env.get(key)!)
         continue
       }
-      if (assignment.rhs === null) {
-        this.scope.set(key, this.resolve(key) ?? '')
-        continue
-      }
       const value = this.evaluateExpression(assignment.rhs)
       this.scope.set(key, value)
     }
     return this.scope
   }
 
-  private evaluateExpression(expr: Expression): string {
-    if (expr instanceof RawValue) {
-      return expr.value
+  private evaluateExpression(nodes: Expression[]): string {
+    let result = ''
+    for (const node of nodes) {
+      if (node instanceof Characters) {
+        result += node.value
+      } else if (node instanceof Expansion) {
+        result += this.evaluateExpansion(node)
+      }
     }
-    if (expr instanceof CompositeValue) {
-      return expr.nodes.reduce(
-        (value, node) => value + this.evaluateExpression(node),
-        ''
-      )
-    }
-    return this.evaluateReference(expr)
+    return result
   }
 
   /**
    * @link https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02
    */
-  private evaluateReference(ref: Reference): string {
-    const key = ref.id
+  private evaluateExpansion(node: Expansion): string {
+    const key = node.id
     let value = this.resolve(key)
-
-    if (ref instanceof SimpleReference) {
-      return value ?? ''
-    }
-
-    let checkNull = (ref.op ?? '').charAt(0) === ':'
+    let checkNull = (node.op ?? '').charAt(0) === ':'
     let test = checkNull ? isUnsetOrNull : isUnset
-    switch (ref.op) {
+    switch (node.op) {
       case '-':
       case ':-': {
         if (!test(value)) return value ?? ''
-        return this.evaluateExpression(ref.rhs)
+        return this.evaluateExpression(node.rhs)
       }
       case '=':
       case ':=': {
         if (!test(value)) return value ?? ''
-        value = this.evaluateExpression(ref.rhs)
+        value = this.evaluateExpression(node.rhs)
         this.scope.set(key, value)
         return value
       }
       case '+':
       case ':+': {
         if (test(value)) return ''
-        return this.evaluateExpression(ref.rhs)
+        return this.evaluateExpression(node.rhs)
       }
       case '?':
       case ':?': {
         if (!test(value)) return value ?? ''
-        let message = this.evaluateExpression(ref.rhs)
+        let message = this.evaluateExpression(node.rhs)
         if (!message) {
           message = `Missing required value for variable "${key}"`
         }

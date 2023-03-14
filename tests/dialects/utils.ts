@@ -4,7 +4,7 @@ import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
 type TestInput = {
   desc: string
   input: string
-  scope?: Scope | NodeJS.Dict<string>
+  env?: Scope | NodeJS.Dict<string>
   override?: boolean
 }
 
@@ -23,14 +23,14 @@ export type TestCase =
   | ErrorCase
 
 
-export const assertEval = ({input, scope = new Map(), override, ...rest}: TestCase, parse: Parser) => {
+export const assertEval = ({input, env = new Map(), override, ...rest}: TestCase, parse: Parser) => {
   if ('error' in rest) {
     expect(() => {
       const ast = parse(input)
-      evaluate(ast, toScope(scope), override)
+      evaluate(ast, toScope(env), override)
     }).toThrow(rest.error)
   } else {
     const ast = parse(input)
-    expect(evaluate(ast, toScope(scope), override)).toEqual(toScope(rest.expected))
+    expect(evaluate(ast, toScope(env), override)).toEqual(toScope(rest.expected))
   }
 }

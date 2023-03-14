@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "strict": true,
+    "strictPropertyInitialization": false,
     "allowJs": false,
     "rootDir": ".",
     "outDir": "dist",
@@ -22,9 +23,10 @@
   ],
   "exclude": [
     "lib/**/*",
-    "node_modules"
+    "node_modules",
   ],
   "ts-node": {
-    "files": true
+    "files": true,
+    "esm": true,
   }
 }
