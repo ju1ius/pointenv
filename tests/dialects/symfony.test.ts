@@ -23,7 +23,18 @@ describe('symfony dialect', () => {
   test.each<TestCase>(loadCases())('file $desc', (data) => {
     assertEval(data, parse)
   })
+
+  const invalidExpansionChars = ['$', '"', "'", '{'].map(c => ({
+    desc: 'unexpected character in expansion-value state',
+    input: `a=\${foo:-${c}}`,
+    error: ParseError,
+  }))
   test.each<TestCase>([
+    {
+      desc: 'unexpected character in assignment-list state',
+      input: '$$',
+      error: ParseError,
+    },
     {
       desc: 'whitespace after = in non-empty assignment',
       input: 'a= 1',
@@ -34,6 +45,12 @@ describe('symfony dialect', () => {
       input: 'a=1\\\n2',
       error: ParseError,
     },
+    {
+      desc: 'unexpected character in complex-expansion state',
+      input: 'a=${foo|bar}',
+      error: ParseError,
+    },
+    ...invalidExpansionChars,
   ])('$desc', (data) => {
     assertEval(data, parse)
   })

@@ -240,7 +240,7 @@ class SymfonyTokenizer extends Tokenizer {
       case '':
         throw new ParseError(`Unterminated expansion at offset ${this.pos}`)
       case '"': case "'": case '$': case '{':
-        this.unexpectedChar(cc)
+        throw this.unexpectedChar(cc)
       case '}':
         yield* this.flushTheTemporaryBuffer()
         yield new Token(TokenKind.EndExpansion, '}', this.pos)

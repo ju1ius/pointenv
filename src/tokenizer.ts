@@ -35,10 +35,6 @@ export type TokenStream = IterableIterator<Token>
 
 export type State = () => Iterable<Token>
 
-export const isAlpha = (c: string) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-export const isDigit = (c: string) => c >= '0' && c <= '9'
-export const isAlnum = (c: string) => isAlpha(c) || isDigit(c)
-
 export const COMMENT_RX = /[^\n]*/y
 export const WS_RX = /[ \t]+/y
 export const WSNL_RX = /[ \t\n]+/y
@@ -73,28 +69,7 @@ export abstract class Tokenizer implements ITokenizer {
     }
   }
 
-  protected *assignmentListState() {
-    const cc = this.consumeTheNextCharacter()
-    switch (cc) {
-      case '':
-        yield this.eof()
-        return
-      case ' ': case "\t": case "\n":
-        // TODO: optimize this
-        break
-      case '#':
-        this.state = this.commentState
-        break
-      default:
-        if (cc === '_' || isAlpha(cc)) {
-          // TODO: optimize this
-          this.buffer += cc
-          this.state = this.assignmentNameState
-          return
-        }
-        throw this.unexpectedChar(cc)
-    }
-  }
+  protected abstract assignmentListState(): Iterable<Token>
 
   protected *commentState() {
     const cc = this.consumeTheNextCharacter()
@@ -113,24 +88,6 @@ export abstract class Tokenizer implements ITokenizer {
       }
     }
   }
-
-  protected *assignmentNameState() {
-    const cc = this.consumeTheNextCharacter()
-    switch (cc) {
-      case '=':
-        yield* this.flushTheTemporaryBuffer(TokenKind.Assign)
-        this.state = this.assignmentValueState
-        break
-      default:
-        if (cc === '_' || isAlnum(cc)) {
-          this.buffer += cc
-          break
-        }
-        throw this.unexpectedChar(cc)
-    }
-  }
-
-  protected abstract assignmentValueState(): Iterable<Token>
 
   protected eof() {
     this.state = null
