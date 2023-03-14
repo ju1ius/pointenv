@@ -1,11 +1,17 @@
 import {Parser} from './common.js'
 import {ParseError} from '../errors.js'
-import {isAlnum, isAlpha, State, Token, TokenKind} from '../tokenizer.js'
+import {COMMENT_RX, IDENT_RX, isAlnum, isAlpha, State, Token, TokenKind, WSNL_RX} from '../tokenizer.js'
 
 
 export default (input: string) => {
   return new Parser(new Tokenizer(input)).parse()
 }
+
+const ASSIGN_RX = /([a-zA-Z_][a-zA-Z0-9_]*)=/y
+const VALUE_CHAR_RX = /[^\\ \t\n'"`$|&;<>()]+/y
+const SQ_RX = /[^']+/y
+const DQ_RX = /[^\\"`$]+/y
+const EXP_VALUE_CHAR_RX = /[^\\}$"`']+/y
 
 export class Tokenizer {
   private pos: number = -1
@@ -37,18 +43,23 @@ export class Tokenizer {
       case '':
         yield this.eof()
         return
-      case ' ': case "\t": case "\n":
-        // TODO: optimize this
+      case ' ': case "\t": case "\n": {
+        WSNL_RX.lastIndex = this.pos
+        const m = WSNL_RX.exec(this.input)!
+        this.pos += m[0].length - 1
         break
+      }
       case '#':
-        // TODO: optimize this
         this.state = this.commentState
         break
       default:
-        if (cc === '_' || isAlpha(cc)) {
-          // TODO: optimize this
-          this.buffer += cc
-          this.state = this.assignmentNameState
+        ASSIGN_RX.lastIndex = this.pos
+        const m = ASSIGN_RX.exec(this.input)
+        if (m) {
+          // assignment name state
+          yield new Token(TokenKind.Assign, m[1], this.pos)
+          this.pos += m[0].length - 1
+          this.state = this.assignmentValueState
           return
         }
         throw this.unexpectedChar(cc)
@@ -64,24 +75,12 @@ export class Tokenizer {
       case "\n":
         this.state = this.assignmentListState
         break
-      default:
+      default: {
+        COMMENT_RX.lastIndex = this.pos
+        const m = COMMENT_RX.exec(this.input)!
+        this.pos += m[0].length - 1
         break
-    }
-  }
-
-  private *assignmentNameState() {
-    const cc = this.consumeTheNextCharacter()
-    switch (cc) {
-      case '=':
-        yield* this.flushTheTemporaryBuffer(TokenKind.Assign)
-        this.state = this.assignmentValueState
-        break
-      default:
-        if (cc === '_' || isAlnum(cc)) {
-          this.buffer += cc
-          break
-        }
-        throw this.unexpectedChar(cc)
+      }
     }
   }
 
@@ -116,10 +115,13 @@ export class Tokenizer {
         throw new ParseError(`Unsupported command expansion at offset ${this.pos}`)
       case '|': case '&': case ';': case '<': case '>': case '(': case ')':
         throw new ParseError(`Unescaped special shell character "${cc}" at offset ${this.pos}`)
-      default:
-        // TODO: optimize this
-        this.buffer += cc
+      default: {
+        VALUE_CHAR_RX.lastIndex = this.pos
+        const m = VALUE_CHAR_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -149,9 +151,13 @@ export class Tokenizer {
       case "'":
         this.state = this.returnStates.pop()!
         break
-      default:
-        this.buffer += cc
+      default: {
+        SQ_RX.lastIndex = this.pos
+        const m = SQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -173,9 +179,12 @@ export class Tokenizer {
         this.returnStates.push(this.doubleQuotedState)
         this.state = this.dollarState
         break
-      default:
-        this.buffer += cc
-        break
+      default: {
+        DQ_RX.lastIndex = this.pos
+        const m = DQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
+      }
     }
   }
 
@@ -210,27 +219,22 @@ export class Tokenizer {
         yield* this.flushTheTemporaryBuffer()
         this.state = this.complexExpansionStartState
         break
-      default:
-        if (cc === '_' || isAlpha(cc)) {
+      default: {
+        IDENT_RX.lastIndex = this.pos
+        const m = IDENT_RX.exec(this.input)
+        if (m) {
           yield* this.flushTheTemporaryBuffer()
-          this.buffer += cc
-          this.state = this.simpleExpansionState
+          // simple expansion state
+          yield new Token(TokenKind.SimpleExpansion, m[0], this.pos)
+          this.pos += m[0].length - 1
+          this.state = this.returnStates.pop()!
           break
         }
         this.buffer += '$'
         this.reconsumeIn(this.returnStates.pop()!)
         break
+      }
     }
-  }
-
-  private *simpleExpansionState() {
-    const cc = this.consumeTheNextCharacter()
-    if (cc === '_' || isAlnum(cc)) {
-      this.buffer += cc
-      return
-    }
-    yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
-    this.reconsumeIn(this.returnStates.pop()!)
   }
 
   private *complexExpansionStartState() {
@@ -320,9 +324,13 @@ export class Tokenizer {
           this.state = this.singleQuotedState
         }
         break
-      default:
-        this.buffer += cc
+      default: {
+        EXP_VALUE_CHAR_RX.lastIndex = this.pos
+        const m = EXP_VALUE_CHAR_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
