@@ -1,5 +1,5 @@
 
-import {Assignment, Expansion, Characters, Operator, Expression, AssignmentList} from '../ast.js'
+import {Assignment, Expansion, Operator, Expression} from '../ast.js'
 import {ParseError} from '../errors.js'
 import {ITokenizer, kindName, Token, TokenKind, tokenName, TokenStream} from '../tokenizer.js'
 
@@ -19,7 +19,7 @@ export class Parser {
     while (true) {
       switch (this.current.kind) {
         case TokenKind.EOF:
-          return new AssignmentList(nodes)
+          return nodes
         case TokenKind.Assign:
           nodes.push(this.parseAssignment())
           break
@@ -44,7 +44,7 @@ export class Parser {
         case TokenKind.EOF:
           return nodes
         case TokenKind.Characters:
-          nodes.push(new Characters(this.current.value))
+          nodes.push(this.current.value)
           break
         case TokenKind.SimpleExpansion:
           nodes.push(new Expansion(this.current.value))
@@ -87,7 +87,7 @@ export class Parser {
         case TokenKind.EndExpansion:
           return nodes
         case TokenKind.Characters:
-          nodes.push(new Characters(this.current.value))
+          nodes.push(this.current.value)
           break
         case TokenKind.SimpleExpansion:
           nodes.push(new Expansion(this.current.value, '-', []))

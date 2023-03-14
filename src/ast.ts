@@ -1,21 +1,8 @@
-export class AssignmentList {
-  constructor(
-    public readonly nodes: Assignment[]
-  ) {
-  }
-}
 
 export class Assignment {
   constructor(
     public readonly id: string,
     public rhs: Expression[],
-  ) {
-  }
-}
-
-export class Characters {
-  constructor(
-    public readonly value: string
   ) {
   }
 }
@@ -35,11 +22,4 @@ export class Expansion {
   }
 }
 
-export type Expression =
-  | Characters
-  | Expansion
-
-export type Node =
-  | AssignmentList
-  | Assignment
-  | Expression
+export type Expression = string | Expansion

@@ -1,7 +1,6 @@
 import {readFile} from 'node:fs/promises'
 
-import {Assignment, AssignmentList} from './ast.js'
-import {Dialect, getParser, Parser} from './dialects.js'
+import {Dialect, getParser, type Parser} from './dialects.js'
 import evaluate, {toScope, type Scope} from './evaluate.js'
 
 type Env = Record<string, string | undefined>
@@ -16,15 +15,8 @@ export default async (paths: string[], options: LoadOptions = {}) => {
   const opts = normalizeOptions(options)
   const parser = await getParser(opts.dialect)
   const lists = await Promise.all(paths.map(path => parseFile(path, parser)))
-  const ast = mergeAssignments(lists)
+  const ast = lists.flat()
   return evaluate(ast, opts.env, opts.override)
-}
-
-function mergeAssignments(lists: AssignmentList[]): AssignmentList {
-  return new AssignmentList(lists.reduce(
-    (acc, {nodes}) => acc.concat(nodes),
-    [] as Assignment[],
-  ))
 }
 
 async function parseFile(path: string, parse: Parser) {

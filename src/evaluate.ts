@@ -1,10 +1,10 @@
-import {AssignmentList, Expression, Characters, Expansion} from './ast.js'
+import {Assignment, Expression, Expansion} from './ast.js'
 import {UndefinedVariable} from './errors.js'
 
 export type Scope = Map<string, string>
 
-export default (list: AssignmentList, scope: Scope = new Map(), override = false) => {
-  return new Evaluator(list, scope, override).evaluate()
+export default (nodes: Assignment[], scope: Scope = new Map(), override = false) => {
+  return new Evaluator(nodes, scope, override).evaluate()
 }
 
 export function toScope(input: Scope | Record<string, string | undefined>): Scope {
@@ -26,13 +26,13 @@ class Evaluator {
   private scope: Scope = new Map()
 
   constructor(
-    private readonly list: AssignmentList,
+    private readonly nodes: Assignment[],
     private readonly env: Scope,
     private readonly overrideEnv: boolean,
   ) {}
 
   evaluate() {
-    for (const assignment of this.list.nodes) {
+    for (const assignment of this.nodes) {
       const key = assignment.id
       if (!this.overrideEnv && this.env.has(key)) {
         this.scope.set(key, this.env.get(key)!)
@@ -46,11 +46,11 @@ class Evaluator {
 
   private evaluateExpression(nodes: Expression[]): string {
     let result = ''
-    for (const node of nodes) {
-      if (node instanceof Characters) {
-        result += node.value
-      } else if (node instanceof Expansion) {
-        result += this.evaluateExpansion(node)
+    for (const expr of nodes) {
+      if (expr instanceof Expansion) {
+        result += this.evaluateExpansion(expr)
+      } else {
+        result += expr
       }
     }
     return result

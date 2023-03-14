@@ -20,6 +20,11 @@ describe.each(dialects)('%p strings', (dialect) => {
       input: `foo="bar`,
       error: ParseError,
     },
+    {
+      desc: 'comment at eof',
+      input: '# a comment',
+      expected: {},
+    }
   ])('$desc', async (data) => {
     const parser = await getParser(dialect)
     assertEval(data, parser)
