@@ -1,11 +1,11 @@
 import {Parser} from './common.js'
 import {ParseError} from '../errors.js'
-import {COMMENT_RX, IDENT_RX, isAlnum, isAlpha, State, Token, TokenKind, WSNL_RX} from '../tokenizer.js'
+import {COMMENT_RX, IDENT_RX, State, Token, TokenKind, WSNL_RX} from '../tokenizer.js'
 
 
-export default (input: string) => {
-  return new Parser(new Tokenizer(input)).parse()
-}
+export default (input: string) =>
+  new Parser(new Tokenizer(input)).parse()
+
 
 const ASSIGN_RX = /([a-zA-Z_][a-zA-Z0-9_]*)=/y
 const VALUE_CHAR_RX = /[^\\ \t\n'"`$|&;<>()]+/y
@@ -243,13 +243,19 @@ export class Tokenizer {
       case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
       case '@': case '*': case '#': case '?': case '$': case '!': case '-':
         throw new ParseError(`Unsupported special shell parameter \${${cc}} at offset ${this.pos}`)
-      default:
-        if (cc === '_' || isAlpha(cc)) {
-          this.buffer += cc
+      default: {
+        IDENT_RX.lastIndex = this.pos
+        const m = IDENT_RX.exec(this.input)
+        if (m) {
+          yield* this.flushTheTemporaryBuffer()
+          // part of complex expansion state
+          this.buffer += m[0]
+          this.pos += m[0].length - 1
           this.state = this.complexExpansionState
           break
         }
         throw this.unexpectedChar(cc)
+      }
     }
   }
 
@@ -271,10 +277,6 @@ export class Tokenizer {
         this.state = this.expansionValueState
         break
       default:
-        if (cc === '_' || isAlnum(cc)) {
-          this.buffer += cc
-          break
-        }
         throw this.unexpectedChar(cc)
     }
   }

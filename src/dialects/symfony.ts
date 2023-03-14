@@ -1,5 +1,5 @@
 import {Parser} from './common.js'
-import {IDENT_RX, isAlnum, isAlpha, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
+import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
 import {ParseError} from '../errors.js'
 
 export default (input: string) =>
@@ -7,6 +7,10 @@ export default (input: string) =>
 
 const ANYCRLF_RX = /\r\n|\r/g
 const ASSIGN_RX = /(?:export[ \t]+)?(?<name>[a-zA-Z_][a-zA-Z0-9_]*)=/y
+const VALUE_RX = /[^ \t\n$"'\\]+/y
+const SQ_RX = /[^']+/y
+const DQ_RX = /[^"$\\]+/y
+const EXP_VALUE_RX = /[^"'${}\\]+/y
 
 const UNQUOTED_ESCAPES = new Map<string, string>([
   ['"', '"'],
@@ -110,9 +114,13 @@ class SymfonyTokenizer extends Tokenizer {
         this.returnStates.push(this.state!)
         this.state = this.dollarState
         break
-      default:
-        this.buffer += cc
+      default: {
+        VALUE_RX.lastIndex = this.pos
+        const m = VALUE_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -124,9 +132,13 @@ class SymfonyTokenizer extends Tokenizer {
       case "'":
         this.state = this.assignmentValueState
         break
-      default:
-        this.buffer += cc
+      default: {
+        SQ_RX.lastIndex = this.pos
+        const m = SQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -152,9 +164,13 @@ class SymfonyTokenizer extends Tokenizer {
         this.returnStates.push(this.state!)
         this.state = this.dollarState
         break
-      default:
-        this.buffer += cc
+      default: {
+        DQ_RX.lastIndex = this.pos
+        const m = DQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -165,10 +181,13 @@ class SymfonyTokenizer extends Tokenizer {
         this.state = this.complexExpansionStartState
         break
       default: {
-        if (cc === '_' || isAlpha(cc)) {
+        IDENT_RX.lastIndex = this.pos
+        const m = IDENT_RX.exec(this.input)
+        if (m) {
           yield* this.flushTheTemporaryBuffer()
-          this.buffer += cc
-          this.state = this.simpleExpansionState
+          yield new Token(TokenKind.SimpleExpansion, m[0], this.pos)
+          this.pos += m[0].length
+          this.reconsumeIn(this.returnStates.pop()!)
           break
         }
         this.buffer += '$'
@@ -178,20 +197,14 @@ class SymfonyTokenizer extends Tokenizer {
     }
   }
 
-  private *simpleExpansionState() {
-    const cc = this.consumeTheNextCharacter()
-    if (cc === '_' || isAlnum(cc)) {
-      this.buffer += cc
-      return
-    }
-    yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
-    this.reconsumeIn(this.returnStates.pop()!)
-  }
-
   private *complexExpansionStartState() {
-    const cc = this.consumeTheNextCharacter()
-    if (cc === '_' || isAlpha(cc)) {
-      this.buffer += cc
+    this.consumeTheNextCharacter()
+    IDENT_RX.lastIndex = this.pos
+    const m = IDENT_RX.exec(this.input)
+    if (m) {
+      yield* this.flushTheTemporaryBuffer()
+      this.buffer += m[0]
+      this.pos += m[0].length - 1
       this.state = this.complexExpansionState
       return
     }
@@ -206,35 +219,18 @@ class SymfonyTokenizer extends Tokenizer {
         yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
         this.state = this.returnStates.pop()!
         break
-      case ':':
-        yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
-        this.buffer += cc
-        this.state = this.expansionOperatorState
-        break
-      case '?': case '=': case '+': case '-':
-        yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
-        yield new Token(TokenKind.ExpansionOperator, cc, this.pos)
-        this.state = this.expansionValueState
-        break
-      default:
-        if (cc === '_' || isAlnum(cc)) {
-          this.buffer += cc
+      default: {
+        OPERATOR_RX.lastIndex = this.pos
+        const m = OPERATOR_RX.exec(this.input)
+        if (m) {
+          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
+          yield new Token(TokenKind.ExpansionOperator, m[0], this.pos)
+          this.pos += m[0].length - 1
+          this.state = this.expansionValueState
           break
         }
         throw this.unexpectedChar(cc)
-    }
-  }
-
-  private *expansionOperatorState() {
-    const cc = this.consumeTheNextCharacter()
-    switch (cc) {
-      case '?': case '=': case '+': case '-':
-        this.buffer += cc
-        yield* this.flushTheTemporaryBuffer(TokenKind.ExpansionOperator)
-        this.state = this.expansionValueState
-        break
-      default:
-        throw this.unexpectedChar(cc)
+      }
     }
   }
 
@@ -259,9 +255,13 @@ class SymfonyTokenizer extends Tokenizer {
         }
         break
       }
-      default:
-        this.buffer += cc
+      default: {
+        EXP_VALUE_RX.lastIndex = this.pos
+        const m = EXP_VALUE_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 import {Parser} from './common.js'
-import {IDENT_RX, isAlnum, isAlpha, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
+import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
 import {ParseError} from '../errors.js'
 
 export default (input: string) => {
