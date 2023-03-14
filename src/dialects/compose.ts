@@ -1,5 +1,5 @@
 import {Parser} from './common.js'
-import {IDENT_RX, isAlnum, isAlpha, OPERATOR_RX, Token, Tokenizer, TokenKind, WS_RX} from '../tokenizer.js'
+import {IDENT_RX, isAlnum, isAlpha, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
 import {ParseError} from '../errors.js'
 
 export default (input: string) => {
@@ -18,6 +18,10 @@ const DQUOTED_ESCAPES = new Map<string, string>([
 ])
 
 const ASSIGN_RX = /(?:export[ \t]+)?(?<name>[a-zA-Z_][a-zA-Z0-9_]*)[ \t]*=[ \t]*/y
+const UQ_RX = /[^$ \t\n]+/y
+const SQ_RX = /[^'\\]+/y
+const DQ_RX = /[^"$\\]+/y
+const EXP_VALUE_CHAR_RX = /[^}$]+/y
 
 class ComposeTokenizer extends Tokenizer {
   constructor(input: string) {
@@ -30,11 +34,13 @@ class ComposeTokenizer extends Tokenizer {
       case '':
         yield this.eof()
         return
-      case ' ': case "\t": case "\n":
-        // TODO: optimize this
+      case ' ': case "\t": case "\n": {
+        WSNL_RX.lastIndex = this.pos
+        const m = WSNL_RX.exec(this.input)!
+        this.pos += m[0].length - 1
         break
+      }
       case '#':
-        // TODO: optimize this
         this.state = this.commentState
         break
       default: {
@@ -101,9 +107,13 @@ class ComposeTokenizer extends Tokenizer {
         }
         break
       }
-      default:
-        this.buffer += cc
+      default: {
+        UQ_RX.lastIndex = this.pos
+        const m = UQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -122,9 +132,13 @@ class ComposeTokenizer extends Tokenizer {
         yield* this.flushTheTemporaryBuffer()
         this.state = this.assignmentListState
         break
-      default:
-        this.buffer += cc
+      default: {
+        SQ_RX.lastIndex = this.pos
+        const m = SQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -150,9 +164,13 @@ class ComposeTokenizer extends Tokenizer {
         this.returnStates.push(this.state!)
         this.state = this.dollarState
         break
-      default:
-        this.buffer += cc
+      default: {
+        DQ_RX.lastIndex = this.pos
+        const m = DQ_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -180,12 +198,17 @@ class ComposeTokenizer extends Tokenizer {
 
   private *complexExpansionStartState() {
     const cc = this.consumeTheNextCharacter()
-    if (cc === '_' || isAlpha(cc)) {
-      this.buffer += cc
+    IDENT_RX.lastIndex = this.pos
+    const m = IDENT_RX.exec(this.input)
+    if (m) {
+      yield* this.flushTheTemporaryBuffer()
+      // part of complex expansion state
+      this.buffer += m[0]
+      this.pos += m[0].length - 1
       this.state = this.complexExpansionState
-    } else {
-      throw this.unexpectedChar(cc)
+      return
     }
+    throw this.unexpectedChar(cc)
   }
 
   private *complexExpansionState() {
@@ -195,35 +218,19 @@ class ComposeTokenizer extends Tokenizer {
         yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
         this.state = this.returnStates.pop()!
         break
-      case ':':
-        yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
-        this.buffer += cc
-        this.state = this.expansionOperatorState
-        break
-      case '?': case '=': case '+': case '-':
-        yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
-        yield new Token(TokenKind.ExpansionOperator, cc, this.pos)
-        this.state = this.expansionValueState
-        break
-      default:
-        if (cc === '_' || isAlnum(cc)) {
-          this.buffer += cc
+      default: {
+        OPERATOR_RX.lastIndex = this.pos
+        const m = OPERATOR_RX.exec(this.input)
+        if (m) {
+          // expansion operator state
+          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
+          yield new Token(TokenKind.ExpansionOperator, m[0], this.pos)
+          this.pos += m[0].length - 1
+          this.state = this.expansionValueState
           break
         }
         throw this.unexpectedChar(cc)
-    }
-  }
-
-  private *expansionOperatorState() {
-    const cc = this.consumeTheNextCharacter()
-    switch (cc) {
-      case '?': case '=': case '+': case '-':
-        this.buffer += cc
-        yield* this.flushTheTemporaryBuffer(TokenKind.ExpansionOperator)
-        this.state = this.expansionValueState
-        break
-      default:
-        throw this.unexpectedChar(cc)
+      }
     }
   }
 
@@ -241,9 +248,13 @@ class ComposeTokenizer extends Tokenizer {
         this.returnStates.push(this.state!)
         this.state = this.dollarState
         break
-      default:
-        this.buffer += cc
+      default: {
+        EXP_VALUE_CHAR_RX.lastIndex = this.pos
+        const m = EXP_VALUE_CHAR_RX.exec(this.input)!
+        this.buffer += m[0]
+        this.pos += m[0].length - 1
         break
+      }
     }
   }
 
@@ -261,15 +272,6 @@ class ComposeTokenizer extends Tokenizer {
     const m = IDENT_RX.exec(this.input)
     if (!m) return null
     const token = new Token(kind, m[0], this.pos)
-    this.pos += m[0].length
-    return token
-  }
-
-  private matchOperator() {
-    OPERATOR_RX.lastIndex = this.pos
-    const m = OPERATOR_RX.exec(this.input)
-    if (!m) return null
-    const token = new Token(TokenKind.ExpansionOperator, m[0], this.pos)
     this.pos += m[0].length
     return token
   }
