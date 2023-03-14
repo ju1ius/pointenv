@@ -1,6 +1,6 @@
 import {Parser} from './common.js'
 import {ParseError} from '../errors.js'
-import {COMMENT_RX, IDENT_RX, State, Token, TokenKind, WSNL_RX} from '../tokenizer.js'
+import {COMMENT_RX, IDENT_RX, OPERATOR_RX, State, Token, TokenKind, WSNL_RX} from '../tokenizer.js'
 
 
 export default (input: string) =>
@@ -266,31 +266,18 @@ export class Tokenizer {
         yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
         this.state = this.returnStates.pop()!
         break
-      case ':':
-        yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
-        this.buffer += cc
-        this.state = this.expansionOperatorState
-        break
-      case '?': case '=': case '+': case '-':
-        yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
-        yield new Token(TokenKind.ExpansionOperator, cc, this.pos)
-        this.state = this.expansionValueState
-        break
-      default:
+      default: {
+        OPERATOR_RX.lastIndex = this.pos
+        const m = OPERATOR_RX.exec(this.input)
+        if (m) {
+          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
+          yield new Token(TokenKind.ExpansionOperator, m[0], this.pos)
+          this.pos += m[0].length - 1
+          this.state = this.expansionValueState
+          break
+        }
         throw this.unexpectedChar(cc)
-    }
-  }
-
-  private *expansionOperatorState() {
-    const cc = this.consumeTheNextCharacter()
-    switch (cc) {
-      case '?': case '=': case '+': case '-':
-        this.buffer += cc
-        yield* this.flushTheTemporaryBuffer(TokenKind.ExpansionOperator)
-        this.state = this.expansionValueState
-        break
-      default:
-        throw this.unexpectedChar(cc)
+      }
     }
   }
 
