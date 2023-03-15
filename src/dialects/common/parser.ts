@@ -1,7 +1,7 @@
 
-import {Assignment, Expansion, Operator, Expression} from '../ast.js'
-import {ParseError} from '../errors.js'
-import {ITokenizer, kindName, Token, TokenKind, tokenName, TokenStream} from '../tokenizer.js'
+import {Assignment, Expansion, Operator, Expression} from './ast.js'
+import {ParseError} from '../../errors.js'
+import {ITokenizer, kindName, Token, TokenKind, tokenName, TokenStream} from './tokenizer.js'
 
 export class Parser {
   private tokens: TokenStream

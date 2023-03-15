@@ -1,6 +1,6 @@
-import {Parser} from '../../../src/dialects/common.js'
+import {Parser} from '../../../src/dialects/common/parser.js'
 import {ParseError} from '../../../src/errors.js'
-import {Token, TokenKind} from '../../../src/tokenizer.js'
+import {Token, TokenKind} from '../../../src/dialects/common/tokenizer.js'
 
 class MockTokenizer {
   constructor(

@@ -1,4 +1,4 @@
-import {Assignment, Expression, Expansion} from './ast.js'
+import {Assignment, Expression, Expansion} from './dialects/common/ast.js'
 import {UndefinedVariable} from './errors.js'
 
 export type Scope = Map<string, string>
@@ -60,37 +60,31 @@ class Evaluator {
    * @link https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02
    */
   private evaluateExpansion(node: Expansion): string {
-    const key = node.id
-    let value = this.resolve(key)
-    let checkNull = (node.op ?? '').charAt(0) === ':'
-    let test = checkNull ? isUnsetOrNull : isUnset
-    switch (node.op) {
+    const {id, op, rhs} = node
+    const value = this.resolve(id)
+    switch (op) {
       case '-':
-      case ':-': {
-        if (!test(value)) return value ?? ''
-        return this.evaluateExpression(node.rhs)
-      }
+        return isUnset(value) ? this.evaluateExpression(rhs) : value
+      case ':-':
+        return isUnsetOrNull(value) ? this.evaluateExpression(rhs) : value
       case '=':
-      case ':=': {
-        if (!test(value)) return value ?? ''
-        value = this.evaluateExpression(node.rhs)
-        this.scope.set(key, value)
-        return value
-      }
+        return isUnset(value) ? this.assign(id, this.evaluateExpression(rhs)) : value
+      case ':=':
+        return isUnsetOrNull(value) ? this.assign(id, this.evaluateExpression(rhs)) : value
       case '+':
-      case ':+': {
-        if (test(value)) return ''
-        return this.evaluateExpression(node.rhs)
-      }
+        return isUnset(value) ? '' : this.evaluateExpression(rhs)
+      case ':+':
+        return isUnsetOrNull(value) ? '' : this.evaluateExpression(rhs)
       case '?':
-      case ':?': {
-        if (!test(value)) return value ?? ''
-        let message = this.evaluateExpression(node.rhs)
-        if (!message) {
-          message = `Missing required value for variable "${key}"`
+        if (isUnset(value)) {
+          throw this.undefinedVariable(id, this.evaluateExpression(rhs))
         }
-        throw new UndefinedVariable(message)
-      }
+        return value
+      case ':?':
+        if (isUnsetOrNull(value)) {
+          throw this.undefinedVariable(id, this.evaluateExpression(rhs))
+        }
+        return value
     }
   }
 
@@ -99,5 +93,17 @@ class Evaluator {
       return this.scope.get(key) ?? this.env.get(key)
     }
     return this.env.get(key) ?? this.scope.get(key)
+  }
+
+  private assign(key: string, value: string) {
+    this.scope.set(key, value)
+    return value
+  }
+
+  private undefinedVariable(name: string, message: string) {
+    if (!message) {
+      message = `Missing required value for variable "${name}"`
+    }
+    return new UndefinedVariable(message)
   }
 }

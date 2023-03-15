@@ -1,6 +1,5 @@
-import {Parser} from './common.js'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
-import {ParseError} from '../errors.js'
+import {Parser} from './common/parser.js'
+import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.js'
 
 export default (input: string) => {
   return new Parser(new ComposeTokenizer(input)).parse()
@@ -47,6 +46,7 @@ class ComposeTokenizer extends Tokenizer {
         const token = this.matchAssignment()
         if (token) {
           yield token
+          this.bufferPos = this.pos
           this.reconsumeIn(this.assignmentValueState)
           break
         }
@@ -67,9 +67,11 @@ class ComposeTokenizer extends Tokenizer {
         this.state = this.assignmentListState
         break
       case "'":
+        this.lastSingleQuoteOffset = this.pos
         this.state = this.singleQuotedState
         break
       case '"':
+        this.quotingStack.push(this.pos)
         this.state = this.doubleQuotedState
         break
       default:
@@ -121,7 +123,7 @@ class ComposeTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
-        throw new ParseError(`Unterminated single-quoted string at offset ${this.pos}`)
+        throw this.unterminatedSingleQuotedString()
       case '\\': {
         const cn = this.input.charAt(this.pos + 1)
         this.buffer += `\\${cn}`
@@ -146,8 +148,9 @@ class ComposeTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
-        throw new ParseError(`Unterminated double-quoted string at offset ${this.pos}`)
+        throw this.unterminatedDoubleQuotedString()
       case '"':
+        this.quotingStack.pop()
         yield* this.flushTheTemporaryBuffer()
         this.state = this.assignmentListState
         break
@@ -178,11 +181,12 @@ class ComposeTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '{':
+        this.expansionStack.push(this.pos)
         yield* this.flushTheTemporaryBuffer()
         this.state = this.complexExpansionStartState
         break
       default: {
-        const token = this.matchIdentifier(TokenKind.SimpleExpansion)
+        const token = this.matchIdentifier(TokenKind.SimpleExpansion, -1)
         if (token) {
           yield* this.flushTheTemporaryBuffer()
           yield token
@@ -215,7 +219,8 @@ class ComposeTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '}':
-        yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
+        this.expansionStack.pop()
+        yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion, -1)
         this.state = this.returnStates.pop()!
         break
       default: {
@@ -223,7 +228,7 @@ class ComposeTokenizer extends Tokenizer {
         const m = OPERATOR_RX.exec(this.input)
         if (m) {
           // expansion operator state
-          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
+          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion, -1)
           yield new Token(TokenKind.ExpansionOperator, m[0], this.pos)
           this.pos += m[0].length - 1
           this.state = this.expansionValueState
@@ -238,8 +243,9 @@ class ComposeTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
-        throw new ParseError(`Unterminated expansion at offset ${this.pos}`)
+        throw this.unterminatedExpansion()
       case '}':
+        this.expansionStack.pop()
         yield* this.flushTheTemporaryBuffer()
         yield new Token(TokenKind.EndExpansion, '}', this.pos)
         this.state = this.returnStates.pop()!
@@ -267,11 +273,11 @@ class ComposeTokenizer extends Tokenizer {
     return token
   }
 
-  private matchIdentifier(kind: TokenKind) {
+  private matchIdentifier(kind: TokenKind, offset = 0) {
     IDENT_RX.lastIndex = this.pos
     const m = IDENT_RX.exec(this.input)
     if (!m) return null
-    const token = new Token(kind, m[0], this.pos)
+    const token = new Token(kind, m[0], this.pos + offset)
     this.pos += m[0].length
     return token
   }

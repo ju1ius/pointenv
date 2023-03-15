@@ -1,5 +1,5 @@
-import {Parser} from './common.js'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from '../tokenizer.js'
+import {Parser} from './common/parser.js'
+import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.js'
 import {ParseError} from '../errors.js'
 
 export default (input: string) =>
@@ -48,6 +48,7 @@ class SymfonyTokenizer extends Tokenizer {
       default: {
         const token = this.matchAssignment()
         if (token) {
+          this.bufferPos = this.pos
           yield token
           this.reconsumeIn(this.assignmentValueStartState)
           break
@@ -89,10 +90,11 @@ class SymfonyTokenizer extends Tokenizer {
         this.reconsumeIn(this.assignmentListState)
         break
       case "'":
+        this.lastSingleQuoteOffset = this.pos
         this.state = this.singleQuotedState
         break
       case '"':
-        ++this.quotingLevel
+        this.quotingStack.push(this.pos)
         this.state = this.doubleQuotedState
         break
       case '\\': {
@@ -128,7 +130,7 @@ class SymfonyTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
-        throw new ParseError(`Unterminated single-quoted string at offset ${this.pos}`)
+        throw this.unterminatedSingleQuotedString()
       case "'":
         this.state = this.assignmentValueState
         break
@@ -146,9 +148,9 @@ class SymfonyTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
-        throw new ParseError(`Unterminated double-quoted string at offset ${this.pos}`)
+        throw this.unterminatedDoubleQuotedString()
       case '"':
-        --this.quotingLevel
+        this.quotingStack.pop()
         this.state = this.assignmentValueState
         break
       case '\\': {
@@ -178,6 +180,7 @@ class SymfonyTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '{':
+        this.expansionStack.push(this.pos)
         this.state = this.complexExpansionStartState
         break
       default: {
@@ -185,7 +188,7 @@ class SymfonyTokenizer extends Tokenizer {
         const m = IDENT_RX.exec(this.input)
         if (m) {
           yield* this.flushTheTemporaryBuffer()
-          yield new Token(TokenKind.SimpleExpansion, m[0], this.pos)
+          yield new Token(TokenKind.SimpleExpansion, m[0], this.pos - 1)
           this.pos += m[0].length
           this.reconsumeIn(this.returnStates.pop()!)
           break
@@ -216,14 +219,15 @@ class SymfonyTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '}':
-        yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion)
+        this.expansionStack.pop()
+        yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion, - 1)
         this.state = this.returnStates.pop()!
         break
       default: {
         OPERATOR_RX.lastIndex = this.pos
         const m = OPERATOR_RX.exec(this.input)
         if (m) {
-          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion)
+          yield* this.flushTheTemporaryBuffer(TokenKind.StartExpansion, -1)
           yield new Token(TokenKind.ExpansionOperator, m[0], this.pos)
           this.pos += m[0].length - 1
           this.state = this.expansionValueState
@@ -238,17 +242,18 @@ class SymfonyTokenizer extends Tokenizer {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
-        throw new ParseError(`Unterminated expansion at offset ${this.pos}`)
+        throw this.unterminatedExpansion()
       case '"': case "'": case '$': case '{':
         throw this.unexpectedChar(cc)
       case '}':
+        this.expansionStack.pop()
         yield* this.flushTheTemporaryBuffer()
         yield new Token(TokenKind.EndExpansion, '}', this.pos)
         this.state = this.returnStates.pop()!
         break
       case '\\': {
         const cn = this.input.charAt(++this.pos)
-        if (this.quotingLevel > 0 && DQUOTED_ESCAPES.has(cn)) {
+        if (this.quotingStack.length && DQUOTED_ESCAPES.has(cn)) {
           this.buffer += DQUOTED_ESCAPES.get(cn)
         } else {
           this.buffer += `\\${cn}`

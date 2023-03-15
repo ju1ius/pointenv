@@ -1,4 +1,4 @@
-import {Assignment} from './ast.js'
+import {Assignment} from './dialects/common/ast.js'
 
 export enum Dialect {
   Posix = 'posix',

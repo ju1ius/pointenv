@@ -5,8 +5,8 @@ import {glob} from '../posix-resources.js'
 import {assertEval, type TestCase} from './utils.js'
 import parse from '../../src/dialects/posix.js'
 import {ParseError, UndefinedVariable} from '../../src/errors.js'
-import {Tokenizer} from '../../src/dialects/posix.js'
-import {kindName, Token} from '../../src/tokenizer.js'
+import {PosixTokenizer} from '../../src/dialects/posix.js'
+import {kindName, Token} from '../../src/dialects/common/tokenizer.js'
 
 type TokenizationBaseCase = {
   desc: string
@@ -27,7 +27,7 @@ describe('posix: tokenization', () => {
     const blob = readFileSync(path, {encoding: 'utf-8'})
     const cases = JSON.parse(blob)
     test.each<TokenizationCase>(cases)(`${name} > $#: $desc`, async (data) => {
-      const tokenizer = new Tokenizer(data.input)
+      const tokenizer = new PosixTokenizer(data.input)
       if ('error' in data) {
         expect(() => {
           Array.from(tokenizer.tokenize())
