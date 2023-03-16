@@ -1,8 +1,9 @@
 import {type Scope} from './evaluate.js'
 import load, {type LoadOptions} from './load.js'
 
+export type {Scope, LoadOptions}
 export {Dialect} from './dialects.js'
-export {load, type LoadOptions}
+export {load}
 
 export type Options = LoadOptions
 
