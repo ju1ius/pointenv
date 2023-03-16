@@ -2,6 +2,7 @@ import {readFile} from 'node:fs/promises'
 
 import {Dialect, getParser, type Parser} from './dialects.js'
 import evaluate, {toScope, type Scope} from './evaluate.js'
+import {Source} from './source.js'
 
 type Env = Record<string, string | undefined>
 
@@ -21,7 +22,7 @@ export default async (paths: string[], options: LoadOptions = {}) => {
 
 async function parseFile(path: string, parse: Parser) {
   const input = await readFile(path, {encoding: 'utf-8'})
-  return parse(input)
+  return parse(new Source(input, path))
 }
 
 function normalizeOptions(opts: LoadOptions) {

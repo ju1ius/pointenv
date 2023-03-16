@@ -1,13 +1,19 @@
 import {Parser} from '../../../src/dialects/common/parser.js'
-import {ParseError} from '../../../src/errors.js'
 import {Token, TokenKind} from '../../../src/dialects/common/tokenizer.js'
+import {ParseError} from '../../../src/errors.js'
+import {Source} from '../../../src/source.js'
 
 class MockTokenizer {
   constructor(
     private readonly tokens: Token[]
   ) {}
+
   *tokenize() {
     yield* this.tokens
+  }
+
+  toSource() {
+    return new Source(this.tokens.map(t => t.value).join(''))
   }
 }
 
@@ -48,9 +54,10 @@ describe('parser', () => {
       expected: ParseError,
     }
   ])('$desc', ({input, expected}) => {
-    const parser = new Parser(new MockTokenizer(input))
+    let tokenizer = new MockTokenizer(input)
+    const parser = new Parser(tokenizer)
     expect(() => {
-      parser.parse()
+      parser.parse(tokenizer.toSource())
     }).toThrow(expected)
   })
 })

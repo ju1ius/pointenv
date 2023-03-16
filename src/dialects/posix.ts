@@ -1,10 +1,11 @@
 import {Parser} from './common/parser.js'
 import {ParseError} from '../errors.js'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX} from './common/tokenizer.js'
+import {COMMENT_RX, IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX} from './common/tokenizer.js'
+import type {Source} from '../source.js'
 
 
-export default (input: string) =>
-  new Parser(new PosixTokenizer(input)).parse()
+export default (src: Source) =>
+  new Parser(new PosixTokenizer()).parse(src)
 
 
 const ASSIGN_RX = /([a-zA-Z_][a-zA-Z0-9_]*)=/y
@@ -27,10 +28,13 @@ export class PosixTokenizer extends Tokenizer {
         this.pos += m[0].length - 1
         break
       }
-      case '#':
-        this.state = this.commentState
+      case '#': {
+        COMMENT_RX.lastIndex = this.pos
+        const m = COMMENT_RX.exec(this.input)!
+        this.pos += m[0].length - 1
         break
-      default:
+      }
+      default: {
         ASSIGN_RX.lastIndex = this.pos
         const m = ASSIGN_RX.exec(this.input)
         if (m) {
@@ -42,6 +46,7 @@ export class PosixTokenizer extends Tokenizer {
           return
         }
         throw this.unexpectedChar(cc)
+      }
     }
   }
 
@@ -74,9 +79,9 @@ export class PosixTokenizer extends Tokenizer {
         this.state = this.dollarState
         break
       case '`':
-        throw new ParseError(`Unsupported command expansion at offset ${this.pos}`)
+        throw ParseError.in(this.src, this.pos, 'Unsupported command expansion')
       case '|': case '&': case ';': case '<': case '>': case '(': case ')':
-        throw new ParseError(`Unescaped special shell character "${cc}" at offset ${this.pos}`)
+        throw ParseError.in(this.src, this.pos, `Unescaped special shell character "${cc}"`)
       default: {
         VALUE_CHAR_RX.lastIndex = this.pos
         const m = VALUE_CHAR_RX.exec(this.input)!
@@ -129,7 +134,7 @@ export class PosixTokenizer extends Tokenizer {
       case '':
         throw this.unterminatedDoubleQuotedString()
       case '`':
-        throw new ParseError(`Unsupported command expansion at offset ${this.pos}`)
+        throw ParseError.in(this.src, this.pos, 'Unsupported command expansion')
       case '"':
         this.quotingStack.pop()
         this.state = this.returnStates.pop()!
@@ -174,9 +179,9 @@ export class PosixTokenizer extends Tokenizer {
     switch (cc) {
       case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
       case '@': case '*': case '#': case '?': case '$': case '!': case '-':
-        throw new ParseError(`Unsupported special shell parameter \$${cc} at offset ${this.pos - 1}`)
+        throw ParseError.in(this.src, this.pos - 1, `Unsupported special shell parameter \$${cc}`)
       case '(':
-        throw new ParseError(`Unsupported command or arithmetic expansion at offset ${this.pos - 1}`)
+        throw ParseError.in(this.src, this.pos - 1, 'Unsupported command or arithmetic expansion')
       case '{':
         this.expansionStack.push(this.pos)
         yield* this.flushTheTemporaryBuffer()
@@ -205,7 +210,7 @@ export class PosixTokenizer extends Tokenizer {
     switch (cc) {
       case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
       case '@': case '*': case '#': case '?': case '$': case '!': case '-':
-        throw new ParseError(`Unsupported special shell parameter \${${cc}} at offset ${this.pos - 2}`)
+        throw ParseError.in(this.src, this.pos - 2, `Unsupported special shell parameter \${${cc}}`)
       default: {
         IDENT_RX.lastIndex = this.pos
         const m = IDENT_RX.exec(this.input)
@@ -251,7 +256,7 @@ export class PosixTokenizer extends Tokenizer {
       case '':
         throw this.unterminatedExpansion()
       case '`':
-        throw new ParseError(`Unsupported command expansion at offset ${this.pos}`)
+        throw ParseError.in(this.src, this.pos, 'Unsupported command expansion')
       case '}':
         this.expansionStack.pop()
         yield* this.flushTheTemporaryBuffer()
@@ -274,6 +279,7 @@ export class PosixTokenizer extends Tokenizer {
         if (this.quotingStack.length) {
           this.buffer += cc
         } else {
+          this.lastSingleQuoteOffset = this.pos
           this.returnStates.push(this.state!)
           this.state = this.singleQuotedState
         }

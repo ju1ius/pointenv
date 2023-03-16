@@ -1,4 +1,5 @@
-import {Assignment} from './dialects/common/ast.js'
+import type {Assignment} from './dialects/common/ast.js'
+import type {Source} from './source.js'
 
 export enum Dialect {
   Posix = 'posix',
@@ -6,7 +7,7 @@ export enum Dialect {
   Symfony = 'symfony',
 }
 
-export type Parser = (input: string) => Assignment[]
+export type Parser = (source: Source) => Assignment[]
 
 export async function getParser(dialect: Dialect): Promise<Parser> {
   const module = await import(`./dialects/${dialect}.js`)

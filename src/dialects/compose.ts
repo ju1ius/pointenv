@@ -1,8 +1,9 @@
+import type {Source} from '../source.js'
 import {Parser} from './common/parser.js'
 import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.js'
 
-export default (input: string) => {
-  return new Parser(new ComposeTokenizer(input)).parse()
+export default (src: Source) => {
+  return new Parser(new ComposeTokenizer()).parse(src)
 }
 
 const DQUOTED_ESCAPES = new Map<string, string>([
@@ -23,10 +24,6 @@ const DQ_RX = /[^"$\\]+/y
 const EXP_VALUE_CHAR_RX = /[^}$]+/y
 
 class ComposeTokenizer extends Tokenizer {
-  constructor(input: string) {
-    super(input)
-  }
-
   protected *assignmentListState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {

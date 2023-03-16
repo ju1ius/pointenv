@@ -1,4 +1,5 @@
 import {ParseError} from '../../errors.js'
+import {Source} from '../../source.js'
 
 export const enum TokenKind {
   EOF,
@@ -34,7 +35,7 @@ export const tokenName = (token: Token) => KIND_NAMES[token.kind]
 export type TokenStream = IterableIterator<Token>
 
 export interface ITokenizer {
-  tokenize(): TokenStream
+  tokenize(src: Source): TokenStream
 }
 
 export type State = () => Iterable<Token>
@@ -47,21 +48,21 @@ export const OPERATOR_RX = /:?[?=+-]/y
 
 
 export abstract class Tokenizer implements ITokenizer {
-  protected pos: number = -1
+  protected src: Source
+  protected input: string
+  protected pos: number
   protected state: State | null = null
-  protected returnStates: State[] = []
-  protected buffer: string = ''
-  protected bufferPos: number = 0
+  protected returnStates: State[]
+  protected buffer: string
+  protected bufferPos: number
   // error position tracking
-  protected lastSingleQuoteOffset = 0
-  protected quotingStack: number[] = []
-  protected expansionStack: number[] = []
+  protected lastSingleQuoteOffset: number
+  protected quotingStack: number[]
+  protected expansionStack: number[]
 
-  constructor(
-    protected readonly input: string
-  ) {}
-
-  *tokenize() {
+  *tokenize(src: Source) {
+    this.src = src
+    this.input = src.bytes
     this.pos = -1
     this.state = this.assignmentListState
     this.returnStates = []
@@ -78,7 +79,7 @@ export abstract class Tokenizer implements ITokenizer {
 
   protected abstract assignmentListState(): Iterable<Token>
 
-  protected *commentState() {
+  protected * commentState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
@@ -101,7 +102,7 @@ export abstract class Tokenizer implements ITokenizer {
     return new Token(TokenKind.EOF, '', this.pos)
   }
 
-  protected *flushTheTemporaryBuffer(kind: TokenKind = TokenKind.Characters, offset = 0) {
+  protected * flushTheTemporaryBuffer(kind: TokenKind = TokenKind.Characters, offset = 0) {
     if (this.buffer.length) {
       yield new Token(kind, this.buffer, this.bufferPos + offset)
     }
@@ -110,11 +111,7 @@ export abstract class Tokenizer implements ITokenizer {
   }
 
   protected consumeTheNextCharacter() {
-    const cc = this.input.charAt(++this.pos)
-    if (cc === "\x00") {
-      throw this.unexpectedChar('<NUL>')
-    }
-    return cc
+    return this.input.charAt(++this.pos)
   }
 
   protected reconsumeIn(state: State) {
@@ -123,24 +120,23 @@ export abstract class Tokenizer implements ITokenizer {
   }
 
   protected unexpectedChar(cc: string) {
-    const state = this.state?.name
     if (cc === '') {
-      return new ParseError(`Unexpected end of input in ${state} at offset ${this.pos}.`)
+      return ParseError.in(this.src, this.pos, 'Unexpected end of input')
     }
-    return new ParseError(`Unexpected character "${cc}" in ${state} at offset ${this.pos}.`)
+    return ParseError.in(this.src, this.pos, `Unexpected character "${cc}"`)
   }
 
   protected unterminatedSingleQuotedString() {
-    return new ParseError(`Unterminated single-quoted string at offset ${this.lastSingleQuoteOffset}`)
+    return ParseError.in(this.src, this.lastSingleQuoteOffset, 'Unterminated single-quoted string')
   }
 
   protected unterminatedDoubleQuotedString() {
-    const offset = this.quotingStack.pop()
-    return new ParseError(`Unterminated single-quoted string at offset ${offset}`)
+    const offset = this.quotingStack.pop()!
+    return ParseError.in(this.src, offset, 'Unterminated double-quoted string')
   }
 
   protected unterminatedExpansion() {
-    const offset = this.expansionStack.pop()
-    return new ParseError(`Unterminated expansion at offset ${offset}`)
+    const offset = this.expansionStack.pop()!
+    return ParseError.in(this.src, offset, 'Unterminated expansion')
   }
 }

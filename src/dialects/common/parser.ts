@@ -1,9 +1,11 @@
 
-import {Assignment, Expansion, Operator, Expression} from './ast.js'
+import {Assignment, Expansion, type Operator, type Expression} from './ast.js'
 import {ParseError} from '../../errors.js'
-import {ITokenizer, kindName, Token, TokenKind, tokenName, TokenStream} from './tokenizer.js'
+import {type ITokenizer, kindName, Token, TokenKind, tokenName, type TokenStream} from './tokenizer.js'
+import type {Source} from '../../source.js'
 
 export class Parser {
+  private src: Source
   private tokens: TokenStream
   private current: Token
 
@@ -12,8 +14,9 @@ export class Parser {
   ) {
   }
 
-  parse() {
-    this.tokens = this.tokenizer.tokenize()
+  parse(src: Source) {
+    this.src = src
+    this.tokens = this.tokenizer.tokenize(src)
     const nodes = []
     this.consumeTheNextToken()
     while (true) {
@@ -125,6 +128,6 @@ export class Parser {
       const expectedKinds = expected.map(kindName).join(', ')
       message += `, expected ${expectedKinds}.`
     }
-    return new ParseError(message)
+    return ParseError.in(this.src, token.offset, message)
   }
 }

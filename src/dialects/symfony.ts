@@ -1,9 +1,10 @@
 import {Parser} from './common/parser.js'
 import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.js'
 import {ParseError} from '../errors.js'
+import {Source} from '../source.js'
 
-export default (input: string) =>
-  new Parser(new SymfonyTokenizer(preprocess(input))).parse()
+export default (src: Source) =>
+  new Parser(new SymfonyTokenizer()).parse(preprocess(src))
 
 const ANYCRLF_RX = /\r\n|\r/g
 const ASSIGN_RX = /(?:export[ \t]+)?(?<name>[a-zA-Z_][a-zA-Z0-9_]*)=/y
@@ -26,7 +27,10 @@ const DQUOTED_ESCAPES = new Map<string, string>([
   ['$', '$'],
 ])
 
-const preprocess = (input: string) => input.replace(ANYCRLF_RX, '\n')
+const preprocess = ({bytes, filename}: Source) => new Source(
+  bytes.replace(ANYCRLF_RX, '\n'),
+  filename,
+)
 
 class SymfonyTokenizer extends Tokenizer {
 
@@ -69,7 +73,7 @@ class SymfonyTokenizer extends Tokenizer {
             this.reconsumeIn(this.assignmentListState)
             break
           default:
-            throw new ParseError(`Whitespace after equal sign in assignment at offset ${p}`)
+            throw ParseError.in(this.src, p, 'Whitespace after equal sign in assignment')
         }
         break
       }

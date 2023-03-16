@@ -7,6 +7,7 @@ import evaluate from '../../src/evaluate.js'
 import parse from '../../src/dialects/compose.js'
 import {assertEval, TestCase} from './utils.js'
 import {ParseError} from '../../src/errors.js'
+import {Source} from '../../src/source.js'
 
 const loadCases = () => {
   type DataSet = Array<{key: string, value: string}>
@@ -28,7 +29,7 @@ const loadCases = () => {
 
 describe('compose dialect', () => {
   test.each(loadCases())('file $desc', ({input, expected}) => {
-    const ast = parse(input)
+    const ast = parse(new Source(input))
     const result = evaluate(ast)
     expect(result).toEqual(expected)
   })

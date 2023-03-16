@@ -1,5 +1,6 @@
 import {Parser} from '../../src/dialects.js'
 import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
+import {Source} from '../../src/source.js'
 
 type TestInput = {
   desc: string
@@ -26,11 +27,11 @@ export type TestCase =
 export const assertEval = ({input, env = new Map(), override, ...rest}: TestCase, parse: Parser) => {
   if ('error' in rest) {
     expect(() => {
-      const ast = parse(input)
+      const ast = parse(new Source(input))
       evaluate(ast, toScope(env), override)
     }).toThrow(rest.error)
   } else {
-    const ast = parse(input)
+    const ast = parse(new Source(input))
     expect(evaluate(ast, toScope(env), override)).toEqual(toScope(rest.expected))
   }
 }
