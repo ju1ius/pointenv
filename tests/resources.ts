@@ -1,4 +1,4 @@
-import nodeGlob from 'glob'
+import {globSync} from 'glob'
 import {readFileSync} from 'node:fs'
 import nodePath from 'node:path'
 import {fileURLToPath} from 'node:url'
@@ -18,9 +18,8 @@ export function json<T>(path: string): T {
 }
 
 export function glob(pattern: string) {
-  return nodeGlob.sync(pattern, {
+  return globSync(pattern, {
     cwd: `${__dirname}/resources`,
-    root: `${__dirname}/resources`,
     absolute: true,
   })
 }
