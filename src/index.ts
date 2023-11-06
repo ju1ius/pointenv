@@ -1,8 +1,8 @@
-import {type Scope} from './evaluate.js'
-import load, {type LoadOptions} from './load.js'
+import {type Scope} from './evaluate.ts'
+import load, {type LoadOptions} from './load.ts'
 
 export type {Scope, LoadOptions}
-export {Dialect} from './dialects.js'
+export {Dialect} from './dialects.ts'
 export {load}
 
 export type Options = LoadOptions
@@ -15,8 +15,8 @@ export default async (paths: string[], options: Options = {}) => {
 
 function applyScope(scope: Scope, override = false) {
   for (const [key, value] of scope.entries()) {
-    if (override || process.env[key] === undefined) {
-      process.env[key] = value
+    if (override || !Deno.env.has(key)) {
+      Deno.env.set(key, value)
     }
   }
 }

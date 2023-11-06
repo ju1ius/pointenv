@@ -1,7 +1,7 @@
-import {Parser} from './common/parser.js'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.js'
-import {ParseError} from '../errors.js'
-import {Source} from '../source.js'
+import {Parser} from './common/parser.ts'
+import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.ts'
+import {ParseError} from '../errors.ts'
+import {Source} from '../source.ts'
 
 export default (src: Source) =>
   new Parser(new SymfonyTokenizer()).parse(preprocess(src))

@@ -1,6 +1,6 @@
-import type {Source} from '../source.js'
-import {Parser} from './common/parser.js'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.js'
+import type {Source} from '../source.ts'
+import {Parser} from './common/parser.ts'
+import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.ts'
 
 export default (src: Source) => {
   return new Parser(new ComposeTokenizer()).parse(src)

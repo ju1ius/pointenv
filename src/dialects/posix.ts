@@ -1,7 +1,7 @@
-import {Parser} from './common/parser.js'
-import {ParseError} from '../errors.js'
-import {COMMENT_RX, IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX} from './common/tokenizer.js'
-import type {Source} from '../source.js'
+import {Parser} from './common/parser.ts'
+import {ParseError} from '../errors.ts'
+import {COMMENT_RX, IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX} from './common/tokenizer.ts'
+import type {Source} from '../source.ts'
 
 
 export default (src: Source) =>

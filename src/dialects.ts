@@ -1,5 +1,5 @@
-import type {Assignment} from './dialects/common/ast.js'
-import type {Source} from './source.js'
+import type {Assignment} from './dialects/common/ast.ts'
+import type {Source} from './source.ts'
 
 export enum Dialect {
   Posix = 'posix',

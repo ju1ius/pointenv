@@ -1,8 +1,6 @@
-import {readFile} from 'node:fs/promises'
-
-import {Dialect, getParser, type Parser} from './dialects.js'
-import evaluate, {toScope, type Scope} from './evaluate.js'
-import {Source} from './source.js'
+import {Dialect, getParser, type Parser} from './dialects.ts'
+import evaluate, {toScope, type Scope} from './evaluate.ts'
+import {Source} from './source.ts'
 
 type Env = Record<string, string | undefined>
 
@@ -21,14 +19,14 @@ export default async (paths: string[], options: LoadOptions = {}) => {
 }
 
 async function parseFile(path: string, parse: Parser) {
-  const input = await readFile(path, {encoding: 'utf-8'})
+  const input = await Deno.readTextFile(path, {})
   return parse(new Source(input, path))
 }
 
 function normalizeOptions(opts: LoadOptions) {
   return {
     dialect: opts.dialect ?? Dialect.Posix,
-    env: toScope(opts.env ?? process.env),
+    env: toScope(opts.env ?? Deno.env.toObject()),
     override: opts.override ?? false,
   }
 }

@@ -1,8 +1,8 @@
 
-import {Assignment, Expansion, type Operator, type Expression} from './ast.js'
-import {ParseError} from '../../errors.js'
-import {type ITokenizer, kindName, Token, TokenKind, tokenName, type TokenStream} from './tokenizer.js'
-import type {Source} from '../../source.js'
+import {Assignment, Expansion, type Operator, type Expression} from './ast.ts'
+import {ParseError} from '../../errors.ts'
+import {type ITokenizer, kindName, Token, TokenKind, tokenName, type TokenStream} from './tokenizer.ts'
+import type {Source} from '../../source.ts'
 
 export class Parser {
   private src: Source

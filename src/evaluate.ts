@@ -1,5 +1,5 @@
-import {Assignment, Expression, Expansion} from './dialects/common/ast.js'
-import {UndefinedVariable} from './errors.js'
+import {Assignment, Expression, Expansion} from './dialects/common/ast.ts'
+import {UndefinedVariable} from './errors.ts'
 
 export type Scope = Map<string, string>
 

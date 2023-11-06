@@ -1,5 +1,5 @@
-import {ParseError} from '../../errors.js'
-import {Source} from '../../source.js'
+import {ParseError} from '../../errors.ts'
+import {Source} from '../../source.ts'
 
 export const enum TokenKind {
   EOF,

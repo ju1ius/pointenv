@@ -1,4 +1,4 @@
-import type {Source} from './source.js'
+import type {Source} from './source.ts'
 
 export class ParseError extends Error {
   static in(src: Source, offset: number, message: string) {
