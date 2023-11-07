@@ -22,16 +22,18 @@ The `posix` dialect is a subset of the POSIX shell syntax
 and is compatible with shell scripts.
 
 Support for other `dotenv` syntax dialects is included for interoperability purposes.
-Compatibility will be improved gradually, but is not always 100% possible (nor always desirable).
+Compatibility will be improved gradually, but 100% compatibility is not always possible,
+nor desirable (for example symfony supports shell command evaluation, which we don't for obvious reasons).
 
 
 ## Usage
 
 The default entrypoint for this module parses and evaluates
 the given files in order, then injects the resulting variables
-into the `process.env` global object.
+into the global environment object (`process.env` or `Deno.env`).
 
-It returns a `Map<string, string>` object containing the variables that have been injected into `process.env`.
+It returns a `Map<string, string>` object containing the variables
+that have been injected into the environment.
 
 ```ts
 import pointenv from '@ju1ius/pointenv'
@@ -48,7 +50,7 @@ await pointenv(['.env'], {override: true})
 ```
 
 If an `env` option is provided,
-the variable resolution will use that instead of `process.env`.
+the variable resolution will use that instead of the global envionment.
 
 This can be used i.e. for providing defaults for when a variable is not set in the environment.
 
@@ -67,7 +69,9 @@ const env = await pointenv(['.env'], {
 console.log(env.get('BAR')) // 'bar'
 ```
 
-If you just want to parse and evaluate the files without injecting anything into `process.env`, use the `load` function:
+If you just want to parse and evaluate the files
+without injecting anything into the environment,
+use the `load` function:
 
 ```ts
 import {load} from '@ju1ius/pointenv'

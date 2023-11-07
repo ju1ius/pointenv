@@ -48,17 +48,17 @@ export const OPERATOR_RX = /:?[?=+-]/y
 
 
 export abstract class Tokenizer implements ITokenizer {
-  protected src: Source
-  protected input: string
-  protected pos: number
+  protected src!: Source
+  protected input!: string
+  protected pos!: number
   protected state: State | null = null
-  protected returnStates: State[]
-  protected buffer: string
-  protected bufferPos: number
+  protected returnStates!: State[]
+  protected buffer!: string
+  protected bufferPos!: number
   // error position tracking
-  protected lastSingleQuoteOffset: number
-  protected quotingStack: number[]
-  protected expansionStack: number[]
+  protected lastSingleQuoteOffset!: number
+  protected quotingStack!: number[]
+  protected expansionStack!: number[]
 
   *tokenize(src: Source) {
     this.src = src

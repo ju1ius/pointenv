@@ -110,6 +110,7 @@ export class PosixTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   private *singleQuotedState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
@@ -128,6 +129,7 @@ export class PosixTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   private *doubleQuotedState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
@@ -155,6 +157,7 @@ export class PosixTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   private *doubleQuotedEscapeState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
@@ -294,6 +297,7 @@ export class PosixTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   private *expansionValueEscapeState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {

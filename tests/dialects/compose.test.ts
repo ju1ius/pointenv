@@ -1,40 +1,45 @@
-import {readFileSync} from 'node:fs'
-import path from 'node:path'
+import {assert, path} from '../deps.ts'
+const {assertEquals} = assert
+const {basename, resolve, dirname} = path
 
-import * as resources from '../resources.js'
+import {filesIn} from '../resources.ts'
+import {assertEval} from './utils.ts'
 
-import evaluate from '../../src/evaluate.js'
-import parse from '../../src/dialects/compose.js'
-import {assertEval, TestCase} from './utils.js'
-import {ParseError} from '../../src/errors.js'
-import {Source} from '../../src/source.js'
+import evaluate from '../../src/evaluate.ts'
+import parse from '../../src/dialects/compose.ts'
+import {ParseError} from '../../src/errors.ts'
+import {Source} from '../../src/source.ts'
 
 const loadCases = () => {
   type DataSet = Array<{key: string, value: string}>
-  return resources.glob('compose/*.env').map((file) => {
-    const input = readFileSync(file, {encoding: 'utf-8'})
-    const name = path.basename(file)
-    const outFile = path.resolve(path.dirname(file), `${name}.expected.json`)
-    const results: DataSet = JSON.parse(readFileSync(outFile, {encoding: 'utf-8'}))
-    const expected = new Map(
-      results.map(({key, value}) => [key, value])
-    )
-    return {
-      desc: name,
-      input,
-      expected,
+  return Array.from(
+    filesIn('compose', {exts: ['env']}),
+    ({path}) => {
+      const input = Deno.readTextFileSync(path)
+      const name = basename(path)
+      const outFile = resolve(dirname(path), `${name}.expected.json`)
+      const results: DataSet = JSON.parse(Deno.readTextFileSync(outFile))
+      const expected = new Map(
+        results.map(({key, value}) => [key, value])
+      )
+      return {
+        desc: name,
+        input,
+        expected,
+      }
     }
-  })
+  )
 }
 
-describe('compose dialect', () => {
-  test.each(loadCases())('file $desc', ({input, expected}) => {
-    const ast = parse(new Source(input))
-    const result = evaluate(ast)
-    expect(result).toEqual(expected)
-  })
-
-  test.each<TestCase>([
+Deno.test('compose dialect', async (t) => {
+  for (const {desc, input, expected} of loadCases()) {
+    await t.step(`file ${desc}`, () => {
+      const ast = parse(new Source(input))
+      const result = evaluate(ast)
+      assertEquals(result, expected)
+    })
+  }
+  for (const data of [
     {
       desc: 'eof in assignment-value state',
       input: 'a=',
@@ -60,7 +65,9 @@ describe('compose dialect', () => {
       input: 'a=${foo|bar}',
       error: ParseError,
     }
-  ])('$desc', (data) => {
-    assertEval(data, parse)
-  })
+  ]) {
+    await t.step(data.desc, () => {
+      assertEval(data, parse)
+    })
+  }
 })

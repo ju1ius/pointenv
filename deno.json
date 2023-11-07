@@ -1,1 +1,26 @@
-{}
+{
+  "lock": false,
+  "test": {
+    "include": [
+      "./tests"
+    ]
+  },
+  "tasks": {
+    "build:npm": "deno run -A ./scripts/build_npm.ts",
+    "test": "deno test --doc --allow-read=. --allow-env",
+    "coverage:html": "deno task test --coverage=tmp/cov && deno coverage --lcov --output=tmp/cov.lcov tmp/cov && genhtml -o tmp/cov/html tmp/cov",
+    "check": "deno check ./mod.ts"
+  },
+  "fmt": {
+    "include": [
+      "mod.ts",
+      "src",
+      "tests",
+      "scripts"
+    ],
+    "lineWidth": 100,
+    "semiColons": false,
+    "singleQuote": true,
+    "proseWrap": "preserve"
+  }
+}

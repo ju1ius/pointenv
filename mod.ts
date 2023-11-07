@@ -1,8 +1,8 @@
-import {type Scope} from './evaluate.ts'
-import load, {type LoadOptions} from './load.ts'
+import {type Scope} from './src/evaluate.ts'
+import load, {type LoadOptions} from './src/load.ts'
 
 export type {Scope, LoadOptions}
-export {Dialect} from './dialects.ts'
+export {Dialect} from './src/dialects.ts'
 export {load}
 
 export type Options = LoadOptions
@@ -20,3 +20,4 @@ function applyScope(scope: Scope, override = false) {
     }
   }
 }
+

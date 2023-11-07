@@ -5,9 +5,9 @@ import {type ITokenizer, kindName, Token, TokenKind, tokenName, type TokenStream
 import type {Source} from '../../source.ts'
 
 export class Parser {
-  private src: Source
-  private tokens: TokenStream
-  private current: Token
+  private src!: Source
+  private tokens!: TokenStream
+  private current!: Token
 
   constructor(
     private readonly tokenizer: ITokenizer

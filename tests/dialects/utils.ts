@@ -1,11 +1,14 @@
-import {Parser} from '../../src/dialects.js'
-import evaluate, {toScope, type Scope} from '../../src/evaluate.js'
-import {Source} from '../../src/source.js'
+import {assert} from '../deps.ts'
+const {assertEquals, assertThrows} = assert
+
+import {Parser} from '../../src/dialects.ts'
+import evaluate, {toScope, type Scope} from '../../src/evaluate.ts'
+import {Source} from '../../src/source.ts'
 
 type TestInput = {
   desc: string
   input: string
-  env?: Scope | NodeJS.Dict<string>
+  env?: Scope
   override?: boolean
 }
 
@@ -26,12 +29,19 @@ export type TestCase =
 
 export const assertEval = ({input, env = new Map(), override, ...rest}: TestCase, parse: Parser) => {
   if ('error' in rest) {
-    expect(() => {
-      const ast = parse(new Source(input))
-      evaluate(ast, toScope(env), override)
-    }).toThrow(rest.error)
+    assertThrows(
+      () => {
+        const ast = parse(new Source(input))
+        evaluate(ast, toScope(env), override)
+      },
+      // @ts-ignore WIP: change the error type
+      rest.error
+    )
   } else {
     const ast = parse(new Source(input))
-    expect(evaluate(ast, toScope(env), override)).toEqual(toScope(rest.expected))
+    assertEquals(
+      evaluate(ast, toScope(env), override),
+      toScope(rest.expected)
+    )
   }
 }

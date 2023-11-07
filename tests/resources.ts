@@ -1,25 +1,26 @@
-import {globSync} from 'glob'
-import {readFileSync} from 'node:fs'
-import nodePath from 'node:path'
-import {fileURLToPath} from 'node:url'
+import {fs, path as stdPath} from './deps.ts'
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const {fromFileUrl, resolve} = stdPath
+const {walkSync} = fs
+
+const __dirname = fromFileUrl(new URL('.', import.meta.url))
 
 export function path(relativePath: string) {
-  return nodePath.resolve(`${__dirname}/resources`, relativePath)
+  return resolve(`${__dirname}/resources`, relativePath)
 }
 
 export function read(relativePath: string) {
-  return readFileSync(path(relativePath), {encoding: 'utf-8'})
+  return Deno.readTextFileSync(path(relativePath))
 }
 
-export function json<T>(path: string): T {
-  return JSON.parse(read(path))
+export function json<T>(relativePath: string): T {
+  return JSON.parse(read(relativePath))
 }
 
-export function glob(pattern: string) {
-  return globSync(pattern, {
-    cwd: `${__dirname}/resources`,
-    absolute: true,
+export function filesIn(relativePath: string, opts: fs.WalkOptions): IterableIterator<fs.WalkEntry> {
+  return walkSync(path(relativePath), {
+    ...opts,
+    includeDirs: false,
+    includeSymlinks: false,
   })
 }

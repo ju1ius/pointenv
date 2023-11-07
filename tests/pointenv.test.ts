@@ -1,66 +1,89 @@
-import {jest} from '@jest/globals'
-import {toScope} from '../src/evaluate.js'
-import type {Options} from '../src/index.js'
+import {assert} from './deps.ts'
+const {assertEquals, assertObjectMatch} = assert
+
+import pointenv, {load} from '../mod.ts'
+import {toScope} from '../src/evaluate.ts'
 
 type TestCase = {
   desc: string
   files: Record<string, string>
-  options?: Options
+  options?: import('../mod.ts').Options,
   expected: Record<string, string>,
 }
 
-const MockPaths = {
-  files: {} as Record<string, string>,
-}
-jest.unstable_mockModule('node:fs/promises', () => ({
-  readFile: jest.fn(async (path: string) => MockPaths.files[path]),
-}))
+const mockReader = (files: Record<string, string>) =>
+  (path: string) => Promise.resolve(files[path])
 
-describe('pointenv', () => {
-  const backupEnv = process.env
-  beforeEach(() => {
-    Object.assign(process.env, {
-      TEST_IS_DEFINED: 'yep',
-    })
-  })
-  afterEach(() => {
-    // jest.resetAllMocks()
-    process.env = backupEnv
-  })
-  test.each<TestCase>([
+const backupEnv = Deno.env.toObject()
+
+function restoreEnv(original: object) {
+  for (const k of Object.keys(Deno.env.toObject())) {
+    Deno.env.delete(k)
+  }
+  for (const [k, v] of Object.entries(original)) {
+    Deno.env.set(k, v)
+  }
+}
+
+type StepFn = (t: Deno.TestContext) => void | Promise<void>
+
+function wrapStep<T>(
+  f: StepFn,
+  setup: () => T,
+  teardown: (setup: T) => void,
+): StepFn {
+  return (t: Deno.TestContext) => {
+    const s = setup()
+    try {
+      return f(t)
+    } finally {
+      teardown(s)
+    }
+  }
+}
+
+Deno.test('pointenv', async (t) => {
+  for (const data of [
     {
-      desc: 'modifies process.env when a variable is not defined',
+      desc: 'modifies Deno.env when a variable is not defined',
       files: {'one': 'foo=yep'},
       expected: {foo: 'yep'},
     },
     {
-      desc: 'does not modify process.env when a variable is defined',
+      desc: 'does not modify Deno.env when a variable is defined',
       files: {'one': 'TEST_IS_DEFINED=nope'},
       expected: {TEST_IS_DEFINED: 'yep'},
     },
     {
-      desc: 'modifies process.env when a variable is defined but override is true',
+      desc: 'modifies Deno.env when a variable is defined but override is true',
       files: {'one': 'TEST_IS_DEFINED=nope'},
       options: {override: true},
       expected: {TEST_IS_DEFINED: 'nope'},
     },
-  ])('$desc', async ({files, options, expected}) => {
-    MockPaths.files = files
-    const pointenv = (await import('../src/index.js')).default
-
-    const paths = Object.keys(files)
-    const result = await pointenv(paths, options)
-    expect(result).toEqual(new Map(Object.entries(expected)))
-    expect(process.env).toMatchObject(expected)
-  })
+  ] as TestCase[]) {
+    const {desc, files, options, expected} = data
+    await t.step(desc, wrapStep(
+      async () => {
+        const paths = Object.keys(files)
+        const result = await pointenv(paths, {
+          ...options,
+          reader: mockReader(files),
+        })
+        assertEquals(result, new Map(Object.entries(expected)))
+        assertObjectMatch(Deno.env.toObject(), expected)
+      },
+      () => {
+        Deno.env.set('TEST_IS_DEFINED', 'yep')
+      },
+      () => {
+        restoreEnv(backupEnv)
+      }
+    ))
+  }
 })
 
-describe('load', () => {
-  beforeEach(() => {
-    // jest.resetAllMocks()
-  })
-
-  test.each<TestCase>([
+Deno.test('load', async (t) => {
+  for (const data of [
     {
       desc: 'empty file',
       files: {'~/empty': ''},
@@ -95,7 +118,7 @@ describe('load', () => {
       files: {
         'one': 'a=${PATH}',
       },
-      expected: {a: process.env.PATH!},
+      expected: {a: Deno.env.get('PATH')!},
     },
     {
       desc: 'uses the env options',
@@ -106,13 +129,21 @@ describe('load', () => {
       options: {env: {foo: '1', bar: '2'}},
       expected: {a: '1', b: '2'},
     },
-  ])('$desc', async ({files, options, expected}) => {
-    MockPaths.files = files
-    const {load} = await import('../src/index.js')
-
-    const paths = Object.keys(files)
-    const result = await load(paths, options)
-    expect(result).toEqual(toScope(expected))
-  })
+  ] as TestCase[]) {
+    const {desc, files, options, expected} = data
+    await t.step(desc, wrapStep(
+      async () => {
+        const paths = Object.keys(files)
+        const result = await load(paths, {
+          ...options,
+          reader: mockReader(files),
+        })
+        assertEquals(result, toScope(expected))
+      },
+      () => {},
+      () => {
+        restoreEnv(backupEnv)
+      }
+    ))
+  }
 })
-

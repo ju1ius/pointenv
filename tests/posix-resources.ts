@@ -1,26 +1,19 @@
-import {globSync} from 'glob'
-import {readFileSync} from 'node:fs'
-import nodePath from 'node:path'
-import {fileURLToPath} from 'node:url'
+import {fs, path as stdPath} from './deps.ts'
 
-const specPath = fileURLToPath(new URL('../dotenv-spec/tests', import.meta.url))
+const {fromFileUrl, resolve} = stdPath
+const {walkSync} = fs
+
+const specPath = fromFileUrl(new URL('../dotenv-spec/tests', import.meta.url))
 
 export function path(relativePath: string) {
-  return nodePath.resolve(specPath, relativePath)
+  return resolve(specPath, relativePath)
 }
 
-export function read(relativePath: string) {
-  return readFileSync(path(relativePath), {encoding: 'utf-8'})
-}
-
-export function json<T>(path: string): T {
-  return JSON.parse(read(path))
-}
-
-export function glob(pattern: string) {
-  return globSync(pattern, {
-    cwd: specPath,
-    absolute: true,
+export function filesIn(relativePath: string, opts: fs.WalkOptions = {}): IterableIterator<fs.WalkEntry> {
+  return walkSync(path(relativePath), {
+    ...opts,
+    exts: ['json'],
+    includeDirs: false,
+    includeSymlinks: false,
   })
 }
-

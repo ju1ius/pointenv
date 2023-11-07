@@ -16,20 +16,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        deno-version: [v1.x]
         node-version: [18.x]
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
+    - name: Setup Deno ${{ matrix.deno-version }}
+      uses: denoland/setup-deno@v1
+      with:
+        deno-version: ${{ matrix.deno-version }}
     - name: Setup Node ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build
-    - run: npm run coverage
+    - run: deno test --allow-read --allow-env --coverage=coverage
+    - run: deno coverage coverage --lcov --output=cov_profile.lcov
+    - run: deno task build:npm
     - name: Send coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

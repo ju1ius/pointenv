@@ -1,7 +1,11 @@
-import {Source} from '../src/source.js'
+import {assert} from './deps.ts'
 
-describe('Source.positionAt', () => {
-  test.each([
+import {Source} from '../src/source.ts'
+
+const {assertEquals} = assert
+
+Deno.test('Source.positionAt', async (t) => {
+  for (const data of [
     {
       desc: 'offset in single line input',
       input: 'abc',
@@ -20,8 +24,10 @@ describe('Source.positionAt', () => {
       offset: 3,
       expected: {line: 2, column: 2},
     }
-  ])('$desc', ({input, offset, expected}) => {
-    const src = new Source(input)
-    expect(src.positionAt(offset)).toEqual(expected)
-  })
+  ]) {
+    await t.step(data.desc, () => {
+      const src = new Source(data.input)
+      assertEquals(src.positionAt(data.offset), data.expected)
+    })
+  }
 })

@@ -1,13 +1,15 @@
-import {dirname, basename} from 'node:path'
-import {readFileSync} from 'node:fs'
-import {glob} from '../posix-resources.js'
+import {assert, path} from '../deps.ts'
+const {assertEquals, assertThrows} = assert
+const {basename, dirname} = path
 
-import {assertEval, type TestCase} from './utils.js'
-import parse from '../../src/dialects/posix.js'
-import {ParseError, UndefinedVariable} from '../../src/errors.js'
-import {PosixTokenizer} from '../../src/dialects/posix.js'
-import {kindName, Token} from '../../src/dialects/common/tokenizer.js'
-import {Source} from '../../src/source.js'
+import {filesIn} from '../posix-resources.ts'
+import {assertEval, type TestCase} from './utils.ts'
+
+import parse from '../../src/dialects/posix.ts'
+import {ParseError, UndefinedVariable} from '../../src/errors.ts'
+import {PosixTokenizer} from '../../src/dialects/posix.ts'
+import {kindName, Token} from '../../src/dialects/common/tokenizer.ts'
+import {Source} from '../../src/source.ts'
 
 type TokenizationBaseCase = {
   desc: string
@@ -21,36 +23,39 @@ type TokenizationError = TokenizationBaseCase & {
 }
 type TokenizationCase = TokenizationSuccess | TokenizationError
 
-describe('posix: tokenization', () => {
-  const files = glob('tokenization/**/*.json')
-  for (const path of files) {
+Deno.test('posix: tokenization', async (t) => {
+  for (const {path} of filesIn('tokenization')) {
     const name = basename(path)
-    const blob = readFileSync(path, {encoding: 'utf-8'})
-    const cases = JSON.parse(blob)
-    test.each<TokenizationCase>(cases)(`${name} > $#: $desc`, async (data) => {
-      const tokenizer = new PosixTokenizer()
-      if ('error' in data) {
-        expect(() => {
-          Array.from(tokenizer.tokenize(new Source(data.input)))
-        }).toThrow(ParseError)
-      } else {
-        const tokens = Array.from(tokenizer.tokenize(new Source(data.input)), convertToken)
-        expect(tokens).toEqual(data.expected)
-      }
-    })
+    const blob = Deno.readTextFileSync(path)
+    const cases = JSON.parse(blob) as TokenizationCase[]
+    for (const data of cases) {
+      await t.step(`${name} > ${data.desc}`, () => {
+        const tokenizer = new PosixTokenizer()
+        if ('error' in data) {
+          assertThrows(
+            () => Array.from(tokenizer.tokenize(new Source(data.input))),
+            ParseError,
+          )
+        } else {
+          const tokens = Array.from(tokenizer.tokenize(new Source(data.input)), convertToken)
+          assertEquals(tokens, data.expected)
+        }
+      })
+    }
   }
 })
 
-describe('posix: evaluation', () => {
-  const files = glob('evaluation/**/*.json')
-  for (const path of files) {
+Deno.test('posix: evaluation', async (t) => {
+  for (const {path} of filesIn('evaluation')) {
     const dir = basename(dirname(path))
     const name = basename(path)
-    const blob = readFileSync(path, {encoding: 'utf-8'})
-    const cases = JSON.parse(blob)
-    test.each<TestCase>(cases)(`${dir}/${name} > $#: $desc`, async (data) => {
-      assertEval(convertCase(data), parse)
-    })
+    const blob = Deno.readTextFileSync(path)
+    const cases = JSON.parse(blob) as TestCase[]
+    for (const data of cases) {
+      await t.step(`${dir}/${name} > ${data.desc}`, () => {
+        assertEval(convertCase(data), parse)
+      })
+    }
   }
 })
 

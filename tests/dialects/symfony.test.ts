@@ -1,35 +1,41 @@
-import {readFileSync} from 'node:fs'
-import path from 'node:path'
+import {path} from '../deps.ts'
+const {basename} = path
 
-import {ParseError} from '../../src/errors.js'
-import parse from '../../src/dialects/symfony.js'
-import * as resources from '../resources.js'
-import {assertEval, TestCase} from './utils.js'
+import {filesIn, json} from "../resources.ts"
+import {assertEval} from './utils.ts'
+
+import {ParseError} from '../../src/errors.ts'
+import parse from '../../src/dialects/symfony.ts'
 
 const loadCases = () => {
-  return resources.glob('php/symfony/*.env').map((file) => {
-    const input = readFileSync(file, {encoding: 'utf-8'})
-    const name = path.basename(file)
-    const expected = resources.json<Record<string, string>>(`php/symfony/${name}.expected.json`)
-    return {
-      desc: name,
-      input,
-      expected,
+  return Array.from(
+    filesIn('php/symfony', {exts: ['env']}),
+    ({path}) => {
+      const input = Deno.readTextFileSync(path)
+      const name = basename(path)
+      const expected = json<Record<string, string>>(`php/symfony/${name}.expected.json`)
+      return {
+        desc: name,
+        input,
+        expected,
+      }
     }
-  })
+  )
 }
 
-describe('symfony dialect', () => {
-  test.each<TestCase>(loadCases())('file $desc', (data) => {
-    assertEval(data, parse)
-  })
+Deno.test('symfony dialect', async (t) => {
+  for (const data of loadCases()) {
+    await t.step(`file ${data.desc}`, () => {
+      assertEval(data, parse)
+    })
+  }
 
   const invalidExpansionChars = ['$', '"', "'", '{'].map(c => ({
     desc: 'unexpected character in expansion-value state',
     input: `a=\${foo:-${c}}`,
     error: ParseError,
   }))
-  test.each<TestCase>([
+  for (const data of [
     {
       desc: 'unexpected character in assignment-list state',
       input: '$$',
@@ -51,7 +57,9 @@ describe('symfony dialect', () => {
       error: ParseError,
     },
     ...invalidExpansionChars,
-  ])('$desc', (data) => {
-    assertEval(data, parse)
-  })
+  ]) {
+    await t.step(data.desc, () => {
+      assertEval(data, parse)
+    })
+  }
 })
