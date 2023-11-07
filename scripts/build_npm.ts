@@ -24,7 +24,7 @@ await build({
   package: {
     // package.json properties
     name: '@ju1ius/pointenv',
-    version: Deno.args[0],
+    version: Deno.args[0]?.replace(/^v/, ''),
     description: 'Polyglot dotenv parser and evaluator.',
     author: 'ju1ius <jules.bernable@gmail.com>',
     license: 'MIT',
