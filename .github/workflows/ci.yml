@@ -51,4 +51,5 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: npm/package-lock.json
     - run: deno task build:npm
