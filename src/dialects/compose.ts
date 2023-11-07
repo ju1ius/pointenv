@@ -1,6 +1,14 @@
-import type {Source} from '../source.ts'
-import {Parser} from './common/parser.ts'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.ts'
+import type { Source } from '../source.ts'
+import { Parser } from './common/parser.ts'
+import {
+  IDENT_RX,
+  OPERATOR_RX,
+  Token,
+  Tokenizer,
+  TokenKind,
+  WS_RX,
+  WSNL_RX,
+} from './common/tokenizer.ts'
 
 export default (src: Source) => {
   return new Parser(new ComposeTokenizer()).parse(src)
@@ -30,7 +38,9 @@ class ComposeTokenizer extends Tokenizer {
       case '':
         yield this.eof()
         return
-      case ' ': case "\t": case "\n": {
+      case ' ':
+      case '\t':
+      case '\n': {
         WSNL_RX.lastIndex = this.pos
         const m = WSNL_RX.exec(this.input)!
         this.pos += m[0].length - 1
@@ -63,7 +73,7 @@ class ComposeTokenizer extends Tokenizer {
         yield* this.flushTheTemporaryBuffer()
         this.state = this.assignmentListState
         break
-      case "'":
+      case '\'':
         this.lastSingleQuoteOffset = this.pos
         this.state = this.singleQuotedState
         break
@@ -92,15 +102,18 @@ class ComposeTokenizer extends Tokenizer {
         this.returnStates.push(this.state!)
         this.state = this.dollarState
         break
-      case ' ': case "\t": {
+      case ' ':
+      case '\t': {
         const ws = this.consumeWhitespace()
         switch (this.input.charAt(this.pos)) {
-          case '': case '\n': case '#':
+          case '':
+          case '\n':
+          case '#':
             yield* this.flushTheTemporaryBuffer()
             this.reconsumeIn(this.assignmentListState)
             break
           default:
-            --this.pos
+            this.pos--
             this.buffer += ws
             break
         }
@@ -124,10 +137,10 @@ class ComposeTokenizer extends Tokenizer {
       case '\\': {
         const cn = this.input.charAt(this.pos + 1)
         this.buffer += `\\${cn}`
-        ++this.pos
+        this.pos++
         break
       }
-      case "'":
+      case '\'':
         yield* this.flushTheTemporaryBuffer()
         this.state = this.assignmentListState
         break

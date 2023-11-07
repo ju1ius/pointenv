@@ -1,4 +1,3 @@
-
 export class Assignment {
   constructor(
     public readonly id: string,
@@ -7,11 +6,7 @@ export class Assignment {
   }
 }
 
-export type Operator =
-  | '-' | ':-'
-  | '=' | ':='
-  | '+' | ':+'
-  | '?' | ':?'
+export type Operator = '-' | ':-' | '=' | ':=' | '+' | ':+' | '?' | ':?'
 
 export class Expansion {
   constructor(

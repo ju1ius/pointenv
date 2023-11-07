@@ -17,4 +17,3 @@ function generateSymfonyTests() {
         file_put_contents($outFile, json_encode($result, \JSON_PRETTY_PRINT));
     }
 }
-

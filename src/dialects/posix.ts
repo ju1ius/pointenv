@@ -1,12 +1,17 @@
-import {Parser} from './common/parser.ts'
-import {ParseError} from '../errors.ts'
-import {COMMENT_RX, IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX} from './common/tokenizer.ts'
-import type {Source} from '../source.ts'
+import { Parser } from './common/parser.ts'
+import { ParseError } from '../errors.ts'
+import {
+  COMMENT_RX,
+  IDENT_RX,
+  OPERATOR_RX,
+  Token,
+  Tokenizer,
+  TokenKind,
+  WSNL_RX,
+} from './common/tokenizer.ts'
+import type { Source } from '../source.ts'
 
-
-export default (src: Source) =>
-  new Parser(new PosixTokenizer()).parse(src)
-
+export default (src: Source) => new Parser(new PosixTokenizer()).parse(src)
 
 const ASSIGN_RX = /([a-zA-Z_][a-zA-Z0-9_]*)=/y
 const VALUE_CHAR_RX = /[^\\ \t\n'"`$|&;<>()]+/y
@@ -15,14 +20,15 @@ const DQ_RX = /[^\\"`$]+/y
 const EXP_VALUE_CHAR_RX = /[^\\}$"`']+/y
 
 export class PosixTokenizer extends Tokenizer {
-
   protected *assignmentListState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
         yield this.eof()
         return
-      case ' ': case "\t": case "\n": {
+      case ' ':
+      case '\t':
+      case '\n': {
         WSNL_RX.lastIndex = this.pos
         const m = WSNL_RX.exec(this.input)!
         this.pos += m[0].length - 1
@@ -57,14 +63,16 @@ export class PosixTokenizer extends Tokenizer {
         yield* this.flushTheTemporaryBuffer()
         yield this.eof()
         break
-      case ' ': case "\t": case "\n":
+      case ' ':
+      case '\t':
+      case '\n':
         yield* this.flushTheTemporaryBuffer()
         this.state = this.assignmentListState
         break
       case '\\':
         this.state = this.assignmentValueEscapeState
         break
-      case "'":
+      case `'`:
         this.lastSingleQuoteOffset = this.pos
         this.returnStates.push(this.state!)
         this.state = this.singleQuotedState
@@ -80,7 +88,13 @@ export class PosixTokenizer extends Tokenizer {
         break
       case '`':
         throw ParseError.in(this.src, this.pos, 'Unsupported command expansion')
-      case '|': case '&': case ';': case '<': case '>': case '(': case ')':
+      case '|':
+      case '&':
+      case ';':
+      case '<':
+      case '>':
+      case '(':
+      case ')':
         throw ParseError.in(this.src, this.pos, `Unescaped special shell character "${cc}"`)
       default: {
         VALUE_CHAR_RX.lastIndex = this.pos
@@ -116,7 +130,7 @@ export class PosixTokenizer extends Tokenizer {
     switch (cc) {
       case '':
         throw this.unterminatedSingleQuotedString()
-      case "'":
+      case `'`:
         this.state = this.returnStates.pop()!
         break
       default: {
@@ -166,7 +180,10 @@ export class PosixTokenizer extends Tokenizer {
       case '\n':
         this.state = this.doubleQuotedState
         break
-      case '"': case '$': case '`': case '\\':
+      case '"':
+      case '$':
+      case '`':
+      case '\\':
         this.buffer += cc
         this.state = this.doubleQuotedState
         break
@@ -179,6 +196,7 @@ export class PosixTokenizer extends Tokenizer {
 
   private *dollarState() {
     const cc = this.consumeTheNextCharacter()
+    // deno-fmt-ignore
     switch (cc) {
       case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
       case '@': case '*': case '#': case '?': case '$': case '!': case '-':
@@ -210,6 +228,7 @@ export class PosixTokenizer extends Tokenizer {
 
   private *complexExpansionStartState() {
     const cc = this.consumeTheNextCharacter()
+    // deno-fmt-ignore
     switch (cc) {
       case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
       case '@': case '*': case '#': case '?': case '$': case '!': case '-':
@@ -278,7 +297,7 @@ export class PosixTokenizer extends Tokenizer {
         this.returnStates.push(this.state!)
         this.state = this.doubleQuotedState
         break
-      case "'":
+      case `'`:
         if (this.quotingStack.length) {
           this.buffer += cc
         } else {
@@ -306,7 +325,10 @@ export class PosixTokenizer extends Tokenizer {
       case '\n':
         this.state = this.expansionValueState
         break
-      case '"': case '$': case '`': case '\\':
+      case '"':
+      case '$':
+      case '`':
+      case '\\':
         this.buffer += cc
         this.state = this.expansionValueState
         break

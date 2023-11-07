@@ -1,7 +1,7 @@
-import {isDeno} from 'https://deno.land/x/which_runtime/mod.ts'
+import { isDeno } from 'https://deno.land/x/which_runtime/mod.ts'
 
-import type {Assignment} from './dialects/common/ast.ts'
-import type {Source} from './source.ts'
+import type { Assignment } from './dialects/common/ast.ts'
+import type { Source } from './source.ts'
 
 export enum Dialect {
   Posix = 'posix',

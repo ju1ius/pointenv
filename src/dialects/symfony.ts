@@ -1,10 +1,17 @@
-import {Parser} from './common/parser.ts'
-import {IDENT_RX, OPERATOR_RX, Token, Tokenizer, TokenKind, WSNL_RX, WS_RX} from './common/tokenizer.ts'
-import {ParseError} from '../errors.ts'
-import {Source} from '../source.ts'
+import { Parser } from './common/parser.ts'
+import {
+  IDENT_RX,
+  OPERATOR_RX,
+  Token,
+  Tokenizer,
+  TokenKind,
+  WS_RX,
+  WSNL_RX,
+} from './common/tokenizer.ts'
+import { ParseError } from '../errors.ts'
+import { Source } from '../source.ts'
 
-export default (src: Source) =>
-  new Parser(new SymfonyTokenizer()).parse(preprocess(src))
+export default (src: Source) => new Parser(new SymfonyTokenizer()).parse(preprocess(src))
 
 const ANYCRLF_RX = /\r\n|\r/g
 const ASSIGN_RX = /(?:export[ \t]+)?(?<name>[a-zA-Z_][a-zA-Z0-9_]*)=/y
@@ -15,7 +22,7 @@ const EXP_VALUE_RX = /[^"'${}\\]+/y
 
 const UNQUOTED_ESCAPES = new Map<string, string>([
   ['"', '"'],
-  ["'", "'"],
+  ['\'', '\''],
   ['$', '$'],
   ['\\', '\\'],
 ])
@@ -27,20 +34,22 @@ const DQUOTED_ESCAPES = new Map<string, string>([
   ['$', '$'],
 ])
 
-const preprocess = ({bytes, filename}: Source) => new Source(
-  bytes.replace(ANYCRLF_RX, '\n'),
-  filename,
-)
+const preprocess = ({ bytes, filename }: Source) =>
+  new Source(
+    bytes.replace(ANYCRLF_RX, '\n'),
+    filename,
+  )
 
 class SymfonyTokenizer extends Tokenizer {
-
   protected *assignmentListState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
         yield this.eof()
         return
-      case ' ': case "\t": case "\n": {
+      case ' ':
+      case '\t':
+      case '\n': {
         WSNL_RX.lastIndex = this.pos
         const m = WSNL_RX.exec(this.input)!
         this.pos += m[0].length - 1
@@ -62,14 +71,18 @@ class SymfonyTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   protected *assignmentValueStartState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
-      case ' ': case '\t': {
+      case ' ':
+      case '\t': {
         const p = this.pos
         this.consumeWhitespace()
         switch (this.input.charAt(this.pos)) {
-          case '': case '\n': case '#':
+          case '':
+          case '\n':
+          case '#':
             this.reconsumeIn(this.assignmentListState)
             break
           default:
@@ -77,7 +90,8 @@ class SymfonyTokenizer extends Tokenizer {
         }
         break
       }
-      case '': case '\n':
+      case '':
+      case '\n':
         this.reconsumeIn(this.assignmentListState)
         break
       default:
@@ -89,11 +103,14 @@ class SymfonyTokenizer extends Tokenizer {
   protected *assignmentValueState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
-      case '': case ' ': case '\t': case '\n':
+      case '':
+      case ' ':
+      case '\t':
+      case '\n':
         yield* this.flushTheTemporaryBuffer()
         this.reconsumeIn(this.assignmentListState)
         break
-      case "'":
+      case `'`:
         this.lastSingleQuoteOffset = this.pos
         this.state = this.singleQuotedState
         break
@@ -130,12 +147,13 @@ class SymfonyTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   private *singleQuotedState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
         throw this.unterminatedSingleQuotedString()
-      case "'":
+      case `'`:
         this.state = this.assignmentValueState
         break
       default: {
@@ -148,6 +166,7 @@ class SymfonyTokenizer extends Tokenizer {
     }
   }
 
+  // deno-lint-ignore require-yield
   private *doubleQuotedState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
@@ -224,7 +243,7 @@ class SymfonyTokenizer extends Tokenizer {
     switch (cc) {
       case '}':
         this.expansionStack.pop()
-        yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion, - 1)
+        yield* this.flushTheTemporaryBuffer(TokenKind.SimpleExpansion, -1)
         this.state = this.returnStates.pop()!
         break
       default: {
@@ -247,7 +266,10 @@ class SymfonyTokenizer extends Tokenizer {
     switch (cc) {
       case '':
         throw this.unterminatedExpansion()
-      case '"': case "'": case '$': case '{':
+      case '"':
+      case `'`:
+      case '$':
+      case '{':
         throw this.unexpectedChar(cc)
       case '}':
         this.expansionStack.pop()

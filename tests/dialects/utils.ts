@@ -1,9 +1,9 @@
-import {assert} from '../deps.ts'
-const {assertEquals, assertThrows} = assert
+import { assert } from '../deps.ts'
+const { assertEquals, assertThrows } = assert
 
-import {Parser} from '../../src/dialects.ts'
-import evaluate, {toScope, type Scope} from '../../src/evaluate.ts'
-import {Source} from '../../src/source.ts'
+import { Parser } from '../../src/dialects.ts'
+import evaluate, { type Scope, toScope } from '../../src/evaluate.ts'
+import { Source } from '../../src/source.ts'
 
 type TestInput = {
   desc: string
@@ -26,8 +26,10 @@ export type TestCase =
   | SuccessCase
   | ErrorCase
 
-
-export const assertEval = ({input, env = new Map(), override, ...rest}: TestCase, parse: Parser) => {
+export const assertEval = (
+  { input, env = new Map(), override, ...rest }: TestCase,
+  parse: Parser,
+) => {
   if ('error' in rest) {
     assertThrows(
       () => {
@@ -35,13 +37,13 @@ export const assertEval = ({input, env = new Map(), override, ...rest}: TestCase
         evaluate(ast, toScope(env), override)
       },
       // @ts-ignore WIP: change the error type
-      rest.error
+      rest.error,
     )
   } else {
     const ast = parse(new Source(input))
     assertEquals(
       evaluate(ast, toScope(env), override),
-      toScope(rest.expected)
+      toScope(rest.expected),
     )
   }
 }

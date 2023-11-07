@@ -1,5 +1,5 @@
-import {ParseError} from '../../errors.ts'
-import {Source} from '../../source.ts'
+import { ParseError } from '../../errors.ts'
+import { Source } from '../../source.ts'
 
 export const enum TokenKind {
   EOF,
@@ -46,7 +46,6 @@ export const WSNL_RX = /[ \t\n]+/y
 export const IDENT_RX = /[a-zA-Z_][a-zA-Z0-9_]*/y
 export const OPERATOR_RX = /:?[?=+-]/y
 
-
 export abstract class Tokenizer implements ITokenizer {
   protected src!: Source
   protected input!: string
@@ -58,7 +57,7 @@ export abstract class Tokenizer implements ITokenizer {
   // error position tracking
   protected lastSingleQuoteOffset!: number
   protected quotingStack!: number[]
-  protected expansionStack!: number[]
+  protected expansionStack!: number[];
 
   *tokenize(src: Source) {
     this.src = src
@@ -79,13 +78,13 @@ export abstract class Tokenizer implements ITokenizer {
 
   protected abstract assignmentListState(): Iterable<Token>
 
-  protected * commentState() {
+  protected *commentState() {
     const cc = this.consumeTheNextCharacter()
     switch (cc) {
       case '':
         yield this.eof()
         break
-      case "\n":
+      case '\n':
         this.state = this.assignmentListState
         break
       default: {
@@ -102,7 +101,7 @@ export abstract class Tokenizer implements ITokenizer {
     return new Token(TokenKind.EOF, '', this.pos)
   }
 
-  protected * flushTheTemporaryBuffer(kind: TokenKind = TokenKind.Characters, offset = 0) {
+  protected *flushTheTemporaryBuffer(kind: TokenKind = TokenKind.Characters, offset = 0) {
     if (this.buffer.length) {
       yield new Token(kind, this.buffer, this.bufferPos + offset)
     }
@@ -115,7 +114,7 @@ export abstract class Tokenizer implements ITokenizer {
   }
 
   protected reconsumeIn(state: State) {
-    --this.pos
+    ;--this.pos
     this.state = state
   }
 

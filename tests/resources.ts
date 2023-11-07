@@ -1,7 +1,7 @@
-import {fs, path as stdPath} from './deps.ts'
+import { fs, path as stdPath } from './deps.ts'
 
-const {fromFileUrl, resolve} = stdPath
-const {walkSync} = fs
+const { fromFileUrl, resolve } = stdPath
+const { walkSync } = fs
 
 const __dirname = fromFileUrl(new URL('.', import.meta.url))
 
@@ -17,7 +17,10 @@ export function json<T>(relativePath: string): T {
   return JSON.parse(read(relativePath))
 }
 
-export function filesIn(relativePath: string, opts: fs.WalkOptions): IterableIterator<fs.WalkEntry> {
+export function filesIn(
+  relativePath: string,
+  opts: fs.WalkOptions,
+): IterableIterator<fs.WalkEntry> {
   return walkSync(path(relativePath), {
     ...opts,
     includeDirs: false,

@@ -1,5 +1,5 @@
-import {Assignment, Expression, Expansion} from './dialects/common/ast.ts'
-import {UndefinedVariable} from './errors.ts'
+import { Assignment, Expansion, Expression } from './dialects/common/ast.ts'
+import { UndefinedVariable } from './errors.ts'
 
 export type Scope = Map<string, string>
 
@@ -13,14 +13,12 @@ export function toScope(input: Scope | Record<string, string | undefined>): Scop
 }
 
 const isDefinedEntry = (entry: any[]): entry is [string, string] =>
-  entry.every(v => typeof v === 'string')
+  entry.every((v) => typeof v === 'string')
 
-const isUnset = (value: string | null | undefined): value is undefined =>
-  value === undefined
+const isUnset = (value: string | null | undefined): value is undefined => value === undefined
 
 const isUnsetOrNull = (value: string | null | undefined): value is undefined | null | '' =>
   value == null || value === ''
-
 
 class Evaluator {
   private scope: Scope = new Map()
@@ -60,7 +58,7 @@ class Evaluator {
    * @link https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02
    */
   private evaluateExpansion(node: Expansion): string {
-    const {id, op, rhs} = node
+    const { id, op, rhs } = node
     const value = this.resolve(id)
     switch (op) {
       case '-':

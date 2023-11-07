@@ -1,5 +1,5 @@
-import {fs} from '../tests/deps.ts'
-import {build, emptyDir} from 'https://deno.land/x/dnt@0.38.1/mod.ts'
+import { fs } from '../tests/deps.ts'
+import { build, emptyDir } from 'https://deno.land/x/dnt@0.38.1/mod.ts'
 
 await emptyDir('./npm')
 
@@ -35,7 +35,7 @@ await build({
     bugs: {
       url: 'https://github.com/ju1ius/pointenv.git/issues',
     },
-    engines: {node: '>=18.0'},
+    engines: { node: '>=18.0' },
     keywords: [
       'dotenv',
       'parser',
@@ -54,7 +54,7 @@ await build({
         'esm/dotenv-spec',
         'esm/tests/resources',
       ].join('\n'),
-      {append: true},
+      { append: true },
     )
   },
 })

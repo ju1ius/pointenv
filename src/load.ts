@@ -1,6 +1,6 @@
-import {Dialect, getParser, type Parser} from './dialects.ts'
-import evaluate, {toScope, type Scope} from './evaluate.ts'
-import {Source} from './source.ts'
+import { Dialect, getParser, type Parser } from './dialects.ts'
+import evaluate, { type Scope, toScope } from './evaluate.ts'
+import { Source } from './source.ts'
 
 type Env = Record<string, string | undefined>
 type Reader = (path: string) => Promise<string>
@@ -8,14 +8,14 @@ type Reader = (path: string) => Promise<string>
 export interface LoadOptions {
   dialect?: Dialect
   env?: Env | Scope
-  override?: boolean,
-  reader?: Reader,
+  override?: boolean
+  reader?: Reader
 }
 
 export default async (paths: string[], options: LoadOptions = {}) => {
   const opts = normalizeOptions(options)
   const parser = await getParser(opts.dialect)
-  const lists = await Promise.all(paths.map(path => parseFile(path, parser, opts.reader)))
+  const lists = await Promise.all(paths.map((path) => parseFile(path, parser, opts.reader)))
   const ast = lists.flat()
   return evaluate(ast, opts.env, opts.override)
 }

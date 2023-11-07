@@ -1,8 +1,14 @@
-
-import {Assignment, Expansion, type Operator, type Expression} from './ast.ts'
-import {ParseError} from '../../errors.ts'
-import {type ITokenizer, kindName, Token, TokenKind, tokenName, type TokenStream} from './tokenizer.ts'
-import type {Source} from '../../source.ts'
+import { Assignment, Expansion, type Expression, type Operator } from './ast.ts'
+import { ParseError } from '../../errors.ts'
+import {
+  type ITokenizer,
+  kindName,
+  Token,
+  TokenKind,
+  tokenName,
+  type TokenStream,
+} from './tokenizer.ts'
+import type { Source } from '../../source.ts'
 
 export class Parser {
   private src!: Source
@@ -10,7 +16,7 @@ export class Parser {
   private current!: Token
 
   constructor(
-    private readonly tokenizer: ITokenizer
+    private readonly tokenizer: ITokenizer,
   ) {
   }
 
@@ -115,7 +121,7 @@ export class Parser {
   }
 
   private consumeTheNextToken() {
-    const {value, done} = this.tokens.next()
+    const { value, done } = this.tokens.next()
     if (done) return
     this.current = value
     return this.current
