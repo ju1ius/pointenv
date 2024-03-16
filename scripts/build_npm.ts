@@ -1,5 +1,5 @@
 import { fs } from '../tests/deps.ts'
-import { build, emptyDir } from 'https://deno.land/x/dnt@0.38.1/mod.ts'
+import { build, emptyDir } from 'https://deno.land/x/dnt@0.40.0/mod.ts'
 
 await emptyDir('./npm')
 
