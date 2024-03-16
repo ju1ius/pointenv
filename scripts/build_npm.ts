@@ -14,7 +14,7 @@ await fs.copy('dotenv-spec/tests', 'npm/esm/dotenv-spec/tests', {
 await build({
   entryPoints: ['./mod.ts'],
   outDir: './npm',
-  typeCheck: false,
+  typeCheck: 'both',
   scriptModule: false,
   rootTestDir: './tests',
   shims: {
@@ -48,13 +48,18 @@ await build({
   postBuild() {
     Deno.copyFileSync('LICENSE', 'npm/LICENSE')
     Deno.copyFileSync('README.md', 'npm/README.md')
-    Deno.writeTextFileSync(
-      'npm/.npmignore',
-      [
-        'esm/dotenv-spec',
-        'esm/tests/resources',
-      ].join('\n'),
-      { append: true },
-    )
+    processNpmIgnore()
   },
 })
+
+function processNpmIgnore() {
+  const file = 'npm/.npmignore'
+  const lines = Deno.readTextFileSync(file)
+    .split('\n')
+    .filter(entry => !entry.startsWith('esm/src/'))
+    .concat([
+      'esm/dotenv-spec',
+      'esm/tests/resources',
+    ])
+  Deno.writeTextFileSync(file, lines.join('\n'))
+}
