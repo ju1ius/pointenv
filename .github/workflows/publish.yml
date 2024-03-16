@@ -5,23 +5,30 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version to publish'
+        type: string
+        required: true
+
 env:
   CI: true
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.38
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-      - run: deno task build:npm ${{github.ref_name}}
+      - run: deno task build:npm ${{ inputs.version || github.ref_name}}
       - run: npm publish --access=public
         working-directory: npm
         env:
