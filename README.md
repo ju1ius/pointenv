@@ -1,6 +1,8 @@
 # @ju1ius/pointenv
 
-[![codecov](https://codecov.io/gh/ju1ius/pointenv/branch/main/graph/badge.svg?token=f5TpbMGLy7)](https://codecov.io/gh/ju1ius/pointenv)
+[![codecov](https://img.shields.io/codecov/c/gh/ju1ius/pointenv?token=f5TpbMGLy7&style=for-the-badge)](https://app.codecov.io/gh/ju1ius/pointenv)
+[![npm](https://img.shields.io/npm/v/%40ju1ius%2Fpointenv?style=for-the-badge)](https://www.npmjs.com/package/@ju1ius/pointenv)
+[![deno.land](https://img.shields.io/github/v/tag/ju1ius/pointenv?sort=semver&style=for-the-badge&label=deno.land)](https://deno.land/x/pointenv)
 
 Polyglot dotenv parser and evaluator.
 
